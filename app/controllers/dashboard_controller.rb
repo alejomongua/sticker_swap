@@ -2,6 +2,8 @@ class DashboardController < ApplicationController
   DUPLICATES_PER_PAGE = 10
 
   def show
+    progress_query = InventoryProgressQuery.new(current_user)
+
     @duplicate_items = current_user.duplicate_items
     @missing_items = current_user.missing_items
     @duplicate_mode = duplicate_mode_param
@@ -24,18 +26,10 @@ class DashboardController < ApplicationController
                                       .distinct
                                       .order("stickers.prefix ASC")
                                       .pluck("stickers.prefix")
-    @catalog_stickers_count = Sticker.count
-    @owned_stickers_count = [ @catalog_stickers_count - @missing_items.size, 0 ].max
-    @completion_percentage = completion_percentage
+    @progress_summary = progress_query.summary
   end
 
   private
-    def completion_percentage
-      return if @missing_items.empty? || @catalog_stickers_count.zero?
-
-      ((@owned_stickers_count.to_f / @catalog_stickers_count) * 100).round(1)
-    end
-
     def duplicate_items_scope
       scope = current_user.duplicate_items
       scope = scope.where(stickers: { prefix: @duplicate_prefix }).references(:sticker) if @duplicate_prefix.present?

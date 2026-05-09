@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   get :manual, to: "manual#show", as: :manual
 
   get :panel, to: "dashboard#show", as: :dashboard
+  get :progreso, to: "progress#show", as: :progress
   get :estadisticas, to: "statistics#show", as: :statistics
   resource :profile, only: %i[ edit update ], path: :perfil
   resources :inventory_items, only: %i[ create update destroy ], path: :inventario

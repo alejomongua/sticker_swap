@@ -60,6 +60,7 @@
             <%= link_to "Manual", manual_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
             <% if authenticated? %>
               <%= link_to "Panel", dashboard_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
+              <%= link_to "Progreso", progress_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
               <%= link_to "Mercado", matches_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
               <% if statistics_available? %>
                 <%= link_to "Estadísticas", statistics_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>

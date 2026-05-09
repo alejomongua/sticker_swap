@@ -1,0 +1,85 @@
+<% content_for :title, "Progreso" %>
+
+<div class="mx-auto max-w-6xl space-y-8">
+  <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div class="space-y-2">
+        <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Progreso</h1>
+        <p class="text-sm text-slate-600">Estimado con base en tus faltantes cargadas.</p>
+      </div>
+
+      <%= link_to "Volver al panel", dashboard_path, class: "inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950" %>
+    </div>
+
+    <% if @progress_summary.tracked? %>
+      <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,1fr)]">
+        <div>
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="text-lg font-semibold text-slate-950">Álbum completo</h2>
+              <p class="text-sm text-slate-600"><%= @progress_summary.owned_stickers_count %> de <%= @progress_summary.catalog_stickers_count %> fichas estimadas.</p>
+            </div>
+            <span class="text-3xl font-semibold tracking-tight text-slate-950"><%= number_to_percentage(@progress_summary.completion_percentage, precision: 1) %></span>
+          </div>
+
+          <div class="mt-5 h-4 overflow-hidden rounded-full bg-slate-200">
+            <div class="h-full rounded-full bg-amber-500 transition-all" style="width: <%= @progress_summary.completion_percentage %>%"></div>
+          </div>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+          <div class="rounded-2xl bg-slate-50 px-4 py-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Fichas estimadas</p>
+            <p class="mt-2 text-2xl font-semibold text-slate-950"><%= @progress_summary.catalog_stickers_count %></p>
+          </div>
+          <div class="rounded-2xl bg-slate-50 px-4 py-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Faltantes cargadas</p>
+            <p class="mt-2 text-2xl font-semibold text-slate-950"><%= @progress_summary.missing_items_count %></p>
+          </div>
+        </div>
+      </div>
+    <% else %>
+      <div class="mt-6 rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600">
+        Agrega faltantes en el panel para calcular tu avance total y el detalle por prefijo.
+      </div>
+    <% end %>
+  </section>
+
+  <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
+    <div class="space-y-2">
+      <h2 class="text-xl font-semibold text-slate-950">Detalle por prefijo</h2>
+      <p class="text-sm text-slate-600">Cada tarjeta resume una sección del álbum según el prefijo de las fichas.</p>
+    </div>
+
+    <% if @progress_summary.tracked? %>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <% @progress_entries.each do |entry| %>
+          <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-xs font-medium uppercase tracking-wide text-slate-500"><%= entry.group_name %></p>
+                <div class="mt-2 flex items-center gap-3">
+                  <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700"><%= entry.code %></span>
+                  <p class="text-sm font-medium text-slate-900"><%= entry.label %></p>
+                </div>
+              </div>
+
+              <span class="text-lg font-semibold tracking-tight text-slate-950"><%= number_to_percentage(entry.completion_percentage, precision: 1) %></span>
+            </div>
+
+            <div class="mt-4 h-3 overflow-hidden rounded-full bg-slate-200">
+              <div class="h-full rounded-full bg-accent-600 transition-all" style="width: <%= entry.completion_percentage %>%"></div>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between text-sm text-slate-600">
+              <span><%= entry.owned_count %> de <%= entry.total_count %></span>
+              <span><%= pluralize(entry.missing_count, "faltante", "faltantes") %></span>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="mt-6 text-sm text-slate-600">Todavía no hay detalle disponible.</p>
+    <% end %>
+  </section>
+</div>
