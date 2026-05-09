@@ -1,0 +1,10 @@
+<% if record.errors.any? %>
+  <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+    <p class="font-medium">Revisa los datos cargados.</p>
+    <ul class="mt-2 space-y-1">
+      <% record.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>

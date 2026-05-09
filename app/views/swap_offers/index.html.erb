@@ -1,0 +1,75 @@
+<% content_for :title, "Intercambios" %>
+
+<div class="space-y-8">
+  <div class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Mis intercambios</h1>
+    <p class="text-sm text-slate-600">Gestiona las propuestas recibidas y revisa el estado de las que ya enviaste.</p>
+  </div>
+
+  <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
+    <div class="flex items-center justify-between gap-3">
+      <h2 class="text-xl font-semibold text-slate-950">Recibidas</h2>
+      <span class="text-sm text-slate-500"><%= @received_offers.size %> en total</span>
+    </div>
+
+    <% if @received_offers.any? %>
+      <div class="mt-5 space-y-4">
+        <% @received_offers.each do |offer| %>
+          <% badge_classes = case offer.status
+             when "accepted" then "bg-emerald-100 text-emerald-900"
+             when "declined" then "bg-rose-100 text-rose-900"
+             else "bg-amber-100 text-amber-900"
+             end %>
+          <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div class="space-y-1">
+                <h3 class="font-semibold text-slate-950"><%= offer.sender.username %></h3>
+                <p class="text-sm text-slate-700">Te ofrece <strong><%= offer.offered_sticker.display_name %></strong> y pide <strong><%= offer.requested_sticker.display_name %></strong>.</p>
+              </div>
+              <span class="inline-flex rounded-full px-3 py-2 text-sm font-medium <%= badge_classes %>"><%= offer.status_label %></span>
+            </div>
+
+            <% if offer.pending? %>
+              <div class="mt-4 flex flex-wrap gap-3">
+                <%= button_to "Aceptar", accept_swap_offer_path(offer), method: :patch, class: "rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-emerald-700" %>
+                <%= button_to "Rechazar", decline_swap_offer_path(offer), method: :patch, class: "rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" %>
+              </div>
+            <% end %>
+          </article>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="mt-5 text-sm text-slate-600">Todavía no recibiste propuestas.</p>
+    <% end %>
+  </section>
+
+  <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
+    <div class="flex items-center justify-between gap-3">
+      <h2 class="text-xl font-semibold text-slate-950">Enviadas</h2>
+      <span class="text-sm text-slate-500"><%= @sent_offers.size %> en total</span>
+    </div>
+
+    <% if @sent_offers.any? %>
+      <div class="mt-5 space-y-4">
+        <% @sent_offers.each do |offer| %>
+          <% badge_classes = case offer.status
+             when "accepted" then "bg-emerald-100 text-emerald-900"
+             when "declined" then "bg-rose-100 text-rose-900"
+             else "bg-amber-100 text-amber-900"
+             end %>
+          <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div class="space-y-1">
+                <h3 class="font-semibold text-slate-950"><%= offer.receiver.username %></h3>
+                <p class="text-sm text-slate-700">Ofreciste <strong><%= offer.offered_sticker.display_name %></strong> y pediste <strong><%= offer.requested_sticker.display_name %></strong>.</p>
+              </div>
+              <span class="inline-flex rounded-full px-3 py-2 text-sm font-medium <%= badge_classes %>"><%= offer.status_label %></span>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="mt-5 text-sm text-slate-600">Aún no enviaste propuestas. Puedes crear una desde el mercado.</p>
+    <% end %>
+  </section>
+</div>

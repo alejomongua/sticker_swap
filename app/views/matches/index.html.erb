@@ -1,0 +1,90 @@
+<% content_for :title, "Mercado" %>
+
+<div class="space-y-6">
+  <div class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Mercado</h1>
+    <p class="text-sm text-slate-600">Aquí ves quién tiene figuras que te faltan y quién necesita tus repetidas.</p>
+  </div>
+
+  <% if @match_summaries.any? %>
+    <div class="space-y-5">
+      <% @match_summaries.each do |summary| %>
+        <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-slate-950"><%= summary.user.username %></h2>
+              <p class="mt-1 text-sm text-slate-600">
+                <% if summary.direct_match? %>
+                  Hay cruce directo para proponer un intercambio.
+                <% else %>
+                  Hay coincidencia parcial, pero todavía no hay canje directo.
+                <% end %>
+              </p>
+            </div>
+
+            <% if summary.direct_match? %>
+              <span class="inline-flex rounded-full bg-emerald-100 px-3 py-2 text-sm font-medium text-emerald-900">Cruce directo</span>
+            <% end %>
+          </div>
+
+          <div class="mt-6 grid gap-6 lg:grid-cols-2">
+            <div>
+              <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Te puede dar</h3>
+              <% if summary.can_request.any? %>
+                <ul class="mt-3 flex flex-wrap gap-2">
+                  <% summary.can_request.each do |sticker| %>
+                    <li class="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"><%= sticker.display_name %></li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <p class="mt-3 text-sm text-slate-600">No tiene figuras que hoy te falten.</p>
+              <% end %>
+            </div>
+
+            <div>
+              <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Le puedes ofrecer</h3>
+              <% if summary.can_offer.any? %>
+                <ul class="mt-3 flex flex-wrap gap-2">
+                  <% summary.can_offer.each do |sticker| %>
+                    <li class="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"><%= sticker.display_name %></li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <p class="mt-3 text-sm text-slate-600">No necesita tus repetidas actuales.</p>
+              <% end %>
+            </div>
+          </div>
+
+          <% if summary.direct_match? %>
+            <div class="mt-6 space-y-3 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+              <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Propuestas rápidas</h3>
+              <div class="space-y-3">
+                <% summary.can_offer.each do |offered_sticker| %>
+                  <% summary.can_request.each do |requested_sticker| %>
+                    <%= form_with scope: :swap_offer, url: swap_offers_path, class: "flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between" do |form| %>
+                      <%= form.hidden_field :receiver_id, value: summary.user.id %>
+                      <%= form.hidden_field :offered_sticker_id, value: offered_sticker.id %>
+                      <%= form.hidden_field :requested_sticker_id, value: requested_sticker.id %>
+
+                      <div class="text-sm text-slate-700">
+                        <strong class="text-slate-950">Ofreces</strong> <%= offered_sticker.display_name %>
+                        <span class="mx-2 text-slate-300">|</span>
+                        <strong class="text-slate-950">Pides</strong> <%= requested_sticker.display_name %>
+                      </div>
+
+                      <%= form.submit "Enviar propuesta", class: "inline-flex items-center justify-center rounded-2xl bg-accent-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-accent-900" %>
+                    <% end %>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </section>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm shadow-slate-200/50">
+      <p class="text-sm text-slate-600">Todavía no encontramos coincidencias. Carga faltantes y repetidas en tu panel para empezar.</p>
+    </div>
+  <% end %>
+</div>

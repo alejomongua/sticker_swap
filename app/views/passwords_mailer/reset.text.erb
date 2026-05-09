@@ -1,0 +1,10 @@
+Hola <%= @user.username %>,
+
+Recibimos un pedido para restablecer tu contraseña en StickerSwap.
+
+Abre este enlace para actualizarla:
+<%= edit_password_url(@user.password_reset_token) %>
+
+Si no hiciste este pedido, puedes ignorar este correo.
+
+El enlace vence en 30 minutos.

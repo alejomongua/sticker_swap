@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title><%= content_for(:title) || current_page_title %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="StickerSwap">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              accent: {
+                50: "#f0fdfa",
+                100: "#ccfbf1",
+                500: "#14b8a6",
+                600: "#0d9488",
+                700: "#0f766e",
+                900: "#134e4a"
+              }
+            },
+            fontFamily: {
+              sans: ["IBM Plex Sans", "ui-sans-serif", "system-ui"]
+            }
+          }
+        }
+      }
+    </script>
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#f5f5f4_100%)] text-slate-900">
+    <div class="min-h-screen">
+      <header class="border-b border-slate-200/80 bg-white/85 backdrop-blur">
+        <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <div>
+            <%= link_to "StickerSwap", authenticated? ? dashboard_path : new_session_path, class: "text-lg font-semibold tracking-tight text-slate-950" %>
+          </div>
+
+          <nav class="flex items-center gap-2 text-sm font-medium text-slate-600">
+            <% if authenticated? %>
+              <%= link_to "Panel", dashboard_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
+              <%= link_to "Mercado", matches_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
+              <%= link_to "Intercambios", swap_offers_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
+              <%= link_to "Perfil", edit_profile_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
+              <%= button_to "Salir", session_path, method: :delete, class: "rounded-full border border-slate-200 px-3 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950" %>
+            <% else %>
+              <%= link_to "Ingresar", new_session_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
+              <%= link_to "Crear cuenta", new_registration_path, class: "rounded-full bg-accent-700 px-4 py-2 text-white transition hover:bg-accent-900" %>
+            <% end %>
+          </nav>
+        </div>
+      </header>
+
+      <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <%= render "shared/flash" %>
+        <%= yield %>
+      </main>
+    </div>
+  </body>
+</html>

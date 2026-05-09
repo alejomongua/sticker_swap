@@ -1,0 +1,50 @@
+<% content_for :title, "Crear cuenta" %>
+
+<div class="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm shadow-slate-200/50">
+  <div class="space-y-2">
+    <h1 class="text-2xl font-semibold tracking-tight text-slate-950">Crear cuenta</h1>
+    <p class="text-sm text-slate-600">Necesitas un código de invitación válido para registrarte.</p>
+  </div>
+
+  <div class="mt-6">
+    <%= render "shared/form_errors", record: @user %>
+  </div>
+
+  <%= form_with model: @user, url: registration_path, class: "mt-6 space-y-4" do |form| %>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="space-y-2">
+        <%= form.label :username, class: "block text-sm font-medium text-slate-700" %>
+        <%= form.text_field :username, required: true, autofocus: true, class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+      </div>
+
+      <div class="space-y-2">
+        <%= form.label :email, class: "block text-sm font-medium text-slate-700" %>
+        <%= form.email_field :email, required: true, autocomplete: "username", class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+      </div>
+    </div>
+
+    <div class="space-y-2">
+      <%= label_tag :user_invitation_code, "Código de invitación", class: "block text-sm font-medium text-slate-700" %>
+      <%= text_field_tag "user[invitation_code]", params.dig(:user, :invitation_code), required: true, class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 uppercase tracking-wide text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="space-y-2">
+        <%= form.label :password, class: "block text-sm font-medium text-slate-700" %>
+        <%= form.password_field :password, required: true, autocomplete: "new-password", maxlength: 72, class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+      </div>
+
+      <div class="space-y-2">
+        <%= form.label :password_confirmation, class: "block text-sm font-medium text-slate-700" %>
+        <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", maxlength: 72, class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+      </div>
+    </div>
+
+    <label class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+      <%= form.check_box :receive_offer_notifications, class: "mt-1 rounded border-slate-300 text-accent-700 focus:ring-accent-700" %>
+      <span>Quiero recibir correos cuando me llegue una propuesta de intercambio.</span>
+    </label>
+
+    <%= form.submit "Crear cuenta", class: "inline-flex w-full items-center justify-center rounded-2xl bg-accent-700 px-4 py-3 font-medium text-white transition hover:bg-accent-900" %>
+  <% end %>
+</div>

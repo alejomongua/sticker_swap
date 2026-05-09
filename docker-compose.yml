@@ -1,0 +1,82 @@
+services:
+  db:
+    image: postgres:16
+    container_name: sticker_swap_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_EXTERNAL_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      args:
+        APP_DOMAIN: ${APP_DOMAIN}
+        APP_PROTOCOL: ${APP_PROTOCOL:-http}
+        APP_PORT: ${APP_PORT:-8080}
+    container_name: sticker_swap_web
+    command: ./bin/rails server -b 0.0.0.0 -p 3000
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: production
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      APP_DOMAIN: ${APP_DOMAIN}
+      APP_PROTOCOL: ${APP_PROTOCOL:-http}
+      APP_PORT: ${APP_PORT:-8080}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      REGISTRATION_CODE: ${REGISTRATION_CODE:-STICKERSWAP2026}
+      EMAIL_DELIVERY_PROVIDER: ${EMAIL_DELIVERY_PROVIDER:-}
+      MAILER_FROM: ${MAILER_FROM:-}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      MAILERSEND_API_TOKEN: ${MAILERSEND_API_TOKEN:-}
+    expose:
+      - "3000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "ruby -rnet/http -e \"response = Net::HTTP.get_response(URI('http://127.0.0.1:3000/up')); exit(response.code == '200' ? 0 : 1)\""
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: sticker_swap_nginx
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+      NGINX_SSL_ENABLED: ${NGINX_SSL_ENABLED:-false}
+      NGINX_SSL_CERTIFICATE: ${NGINX_SSL_CERTIFICATE:-/etc/nginx/ssl/fullchain.pem}
+      NGINX_SSL_CERTIFICATE_KEY: ${NGINX_SSL_CERTIFICATE_KEY:-/etc/nginx/ssl/privkey.pem}
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+      - "${HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./config/ssl:/etc/nginx/ssl:ro
+      - ./docker/nginx/http.conf.template:/etc/nginx/sticker_swap/http.conf.template:ro
+      - ./docker/nginx/https.conf.template:/etc/nginx/sticker_swap/https.conf.template:ro
+      - ./docker/nginx/start.sh:/etc/nginx/sticker_swap/start.sh:ro
+    command: /bin/sh /etc/nginx/sticker_swap/start.sh
+
+volumes:
+  postgres_data:

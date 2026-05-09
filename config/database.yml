@@ -1,0 +1,26 @@
+# PostgreSQL. Supported versions are 12 and up.
+# Configure using DATABASE_URL or the variables below.
+#
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: <%= ENV.fetch("POSTGRES_HOST", "localhost") %>
+  port: <%= ENV.fetch("POSTGRES_PORT", 5432) %>
+  username: <%= ENV.fetch("POSTGRES_USER", "postgres") %>
+  password: <%= ENV["POSTGRES_PASSWORD"] %>
+
+development:
+  <<: *default
+  database: <%= ENV.fetch("POSTGRES_DB", "sticker_swap_development") %>
+
+# Warning: The database defined as "test" will be erased and
+# re-generated from your development database when you run "rake".
+# Do not set this db to the same as development or production.
+test:
+  <<: *default
+  database: sticker_swap_test
+
+production:
+  <<: *default
+  database: <%= ENV.fetch("POSTGRES_DB", "sticker_swap_production") %>
