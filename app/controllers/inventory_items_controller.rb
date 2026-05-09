@@ -71,7 +71,9 @@ class InventoryItemsController < ApplicationController
       uri = URI.parse(referer)
       return {} unless [ root_path, dashboard_path ].include?(uri.path)
 
-      Rack::Utils.parse_nested_query(uri.query).slice("duplicate_prefix", "duplicate_code", "duplicate_mode", "duplicates_page")
+      Rack::Utils.parse_nested_query(uri.query)
+                 .slice("duplicate_prefix", "duplicate_code", "duplicate_mode", "duplicates_page",
+                        "missing_prefix", "missing_code", "missing_page")
     rescue URI::InvalidURIError
       {}
     end

@@ -1,0 +1,83 @@
+<section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div class="space-y-2">
+      <h2 class="text-xl font-semibold text-slate-950">Faltantes cargadas</h2>
+      <p class="text-sm text-slate-600">Filtra por prefijo o busca una ficha específica para revisar tus pendientes.</p>
+    </div>
+
+    <div class="flex flex-wrap gap-3 text-sm font-medium">
+      <span class="rounded-full bg-amber-100 px-4 py-2 text-amber-900"><%= @missing_total_count %> faltantes</span>
+      <span class="rounded-full bg-slate-100 px-4 py-2 text-slate-700"><%= @missing_items_count %> fichas</span>
+    </div>
+  </div>
+
+  <%= form_with url: dashboard_path, method: :get, class: "mt-5 grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-end", data: { controller: "inventory-filter" } do %>
+    <%= hidden_field_tag :duplicate_mode, @duplicate_mode %>
+    <%= hidden_field_tag :duplicate_prefix, @duplicate_prefix %>
+    <%= hidden_field_tag :duplicate_code, @duplicate_code %>
+    <%= hidden_field_tag :duplicates_page, @duplicate_page %>
+
+    <div class="space-y-2">
+      <%= label_tag :missing_prefix, "Prefijo", class: "block text-sm font-medium text-slate-700" %>
+      <%= select_tag :missing_prefix,
+                     options_for_select([["Todos", nil]] + @missing_prefixes.map { |prefix| [prefix, prefix] }, @missing_prefix),
+                     class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700",
+                     data: { action: "change->inventory-filter#submitImmediately" } %>
+    </div>
+
+    <div class="space-y-2">
+      <%= label_tag :missing_code, "Ficha específica", class: "block text-sm font-medium text-slate-700" %>
+      <%= text_field_tag :missing_code,
+                         @missing_code,
+                         placeholder: "ARG1",
+                         autocomplete: "off",
+                         class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm uppercase text-slate-950 focus:border-accent-700 focus:ring-accent-700",
+                         data: { action: "input->inventory-filter#submitWhenSearchReady" } %>
+    </div>
+
+    <%= link_to "Limpiar",
+                dashboard_path(duplicate_mode: @duplicate_mode,
+                               duplicate_prefix: @duplicate_prefix,
+                               duplicate_code: @duplicate_code,
+                               duplicates_page: @duplicate_page),
+                class: "inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950" %>
+  <% end %>
+
+  <% if @missing_items.any? %>
+    <ul class="mt-5 space-y-3">
+      <% @missing_items.each do |item| %>
+        <li class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <div>
+            <p class="font-medium text-slate-900"><%= item.code %></p>
+            <p class="text-sm text-slate-600"><%= item.sticker.name %></p>
+          </div>
+          <%= button_to "Marcar conseguida", inventory_item_path(item), method: :delete, class: "rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" %>
+        </li>
+      <% end %>
+    </ul>
+
+    <% if @missing_pages > 1 %>
+      <div class="mt-5 flex items-center justify-between gap-4 border-t border-slate-200 pt-4 text-sm text-slate-600">
+        <%= link_to_if @missing_page > 1,
+                       "Anterior",
+                       dashboard_path(@dashboard_filters.merge(duplicates_page: @duplicate_page, missing_page: @missing_page - 1)),
+                       class: "rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" do %>
+          <span class="rounded-full border border-slate-100 px-4 py-2 text-slate-300">Anterior</span>
+        <% end %>
+
+        <span>Página <%= @missing_page %> de <%= @missing_pages %></span>
+
+        <%= link_to_if @missing_page < @missing_pages,
+                       "Siguiente",
+                       dashboard_path(@dashboard_filters.merge(duplicates_page: @duplicate_page, missing_page: @missing_page + 1)),
+                       class: "rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" do %>
+          <span class="rounded-full border border-slate-100 px-4 py-2 text-slate-300">Siguiente</span>
+        <% end %>
+      </div>
+    <% end %>
+  <% elsif @missing_total_count.positive? %>
+    <p class="mt-5 text-sm text-slate-600">No hay faltantes que coincidan con ese filtro.</p>
+  <% else %>
+    <p class="mt-5 text-sm text-slate-600">Todavía no cargaste faltantes.</p>
+  <% end %>
+</section>

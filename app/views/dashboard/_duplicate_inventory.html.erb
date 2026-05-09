@@ -11,23 +11,36 @@
     </div>
   </div>
 
-  <%= form_with url: dashboard_path, method: :get, class: "mt-5 grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto_auto] sm:items-end" do %>
+  <%= form_with url: dashboard_path, method: :get, class: "mt-5 grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-end", data: { controller: "inventory-filter" } do %>
     <%= hidden_field_tag :duplicate_mode, @duplicate_mode %>
+    <%= hidden_field_tag :missing_prefix, @missing_prefix %>
+    <%= hidden_field_tag :missing_code, @missing_code %>
+    <%= hidden_field_tag :missing_page, @missing_page %>
 
     <div class="space-y-2">
       <%= label_tag :duplicate_prefix, "Prefijo", class: "block text-sm font-medium text-slate-700" %>
       <%= select_tag :duplicate_prefix,
                      options_for_select([["Todos", nil]] + @duplicate_prefixes.map { |prefix| [prefix, prefix] }, @duplicate_prefix),
-                     class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+                     class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700",
+                     data: { action: "change->inventory-filter#submitImmediately" } %>
     </div>
 
     <div class="space-y-2">
       <%= label_tag :duplicate_code, "Ficha específica", class: "block text-sm font-medium text-slate-700" %>
-      <%= text_field_tag :duplicate_code, @duplicate_code, placeholder: "ARG1", autocomplete: "off", class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm uppercase text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+      <%= text_field_tag :duplicate_code,
+                         @duplicate_code,
+                         placeholder: "ARG1",
+                         autocomplete: "off",
+                         class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm uppercase text-slate-950 focus:border-accent-700 focus:ring-accent-700",
+                         data: { action: "input->inventory-filter#submitWhenSearchReady" } %>
     </div>
 
-    <%= submit_tag "Filtrar", class: "inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950" %>
-    <%= link_to "Limpiar", dashboard_path(duplicate_mode: @duplicate_mode), class: "inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950" %>
+    <%= link_to "Limpiar",
+                dashboard_path(duplicate_mode: @duplicate_mode,
+                               missing_prefix: @missing_prefix,
+                               missing_code: @missing_code,
+                               missing_page: @missing_page),
+                class: "inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950" %>
   <% end %>
 
   <% if @duplicate_items.any? %>
@@ -61,7 +74,7 @@
       <div class="mt-5 flex items-center justify-between gap-4 border-t border-slate-200 pt-4 text-sm text-slate-600">
         <%= link_to_if @duplicate_page > 1,
                        "Anterior",
-                       dashboard_path(@duplicate_filters.merge(duplicates_page: @duplicate_page - 1)),
+                       dashboard_path(@dashboard_filters.merge(duplicates_page: @duplicate_page - 1, missing_page: @missing_page)),
                        class: "rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" do %>
           <span class="rounded-full border border-slate-100 px-4 py-2 text-slate-300">Anterior</span>
         <% end %>
@@ -70,13 +83,15 @@
 
         <%= link_to_if @duplicate_page < @duplicate_pages,
                        "Siguiente",
-                       dashboard_path(@duplicate_filters.merge(duplicates_page: @duplicate_page + 1)),
+                       dashboard_path(@dashboard_filters.merge(duplicates_page: @duplicate_page + 1, missing_page: @missing_page)),
                        class: "rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" do %>
           <span class="rounded-full border border-slate-100 px-4 py-2 text-slate-300">Siguiente</span>
         <% end %>
       </div>
     <% end %>
-  <% else %>
+  <% elsif @duplicate_copies_count.positive? %>
     <p class="mt-5 text-sm text-slate-600">No hay repetidas que coincidan con ese filtro.</p>
+  <% else %>
+    <p class="mt-5 text-sm text-slate-600">Todavía no cargaste repetidas.</p>
   <% end %>
 </section>

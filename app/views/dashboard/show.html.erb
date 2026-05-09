@@ -87,28 +87,7 @@
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">
-      <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
-        <div class="flex items-center justify-between gap-3">
-          <h2 class="text-xl font-semibold text-slate-950">Faltantes cargadas</h2>
-          <span class="text-sm text-slate-500"><%= @missing_items.size %> en total</span>
-        </div>
-
-        <% if @missing_items.any? %>
-          <ul class="mt-5 space-y-3">
-            <% @missing_items.each do |item| %>
-              <li class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div>
-                  <p class="font-medium text-slate-900"><%= item.code %></p>
-                  <p class="text-sm text-slate-600"><%= item.sticker.name %></p>
-                </div>
-                <%= button_to "Marcar conseguida", inventory_item_path(item), method: :delete, class: "rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" %>
-              </li>
-            <% end %>
-          </ul>
-        <% else %>
-          <p class="mt-5 text-sm text-slate-600">Todavía no cargaste faltantes.</p>
-        <% end %>
-      </section>
+      <%= render "missing_inventory" %>
 
       <%= render "duplicate_inventory" %>
     </div>
