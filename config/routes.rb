@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   root "dashboard#show"
+  get :manual, to: "manual#show", as: :manual
 
   get :panel, to: "dashboard#show", as: :dashboard
   resource :profile, only: %i[ edit update ], path: :perfil

@@ -49,7 +49,7 @@
   </head>
 
   <body class="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#f5f5f4_100%)] text-slate-900">
-    <div class="min-h-screen">
+    <div class="flex min-h-screen flex-col">
       <header class="border-b border-slate-200/80 bg-white/85 backdrop-blur">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div>
@@ -57,6 +57,7 @@
           </div>
 
           <nav class="flex items-center gap-2 text-sm font-medium text-slate-600">
+            <%= link_to "Manual", manual_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
             <% if authenticated? %>
               <%= link_to "Panel", dashboard_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
               <%= link_to "Mercado", matches_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
@@ -71,10 +72,19 @@
         </div>
       </header>
 
-      <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
         <%= render "shared/flash" %>
         <%= yield %>
       </main>
+
+      <footer class="border-t border-slate-200/80 bg-white/85">
+        <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-sm text-slate-600 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+          <p>
+            Repo creado por <a href="https://github.com/alejomongua/sticker_swap" class="font-medium text-slate-900 underline decoration-slate-300 underline-offset-4 transition hover:text-accent-700 hover:decoration-accent-300">@alejomongua en GitHub</a>.
+          </p>
+          <p>Sin el patrocinio de: FIFA, Panini, Coca-Cola.</p>
+        </div>
+      </footer>
     </div>
   </body>
 </html>
