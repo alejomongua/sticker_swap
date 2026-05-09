@@ -1,0 +1,82 @@
+<section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div class="space-y-2">
+      <h2 class="text-xl font-semibold text-slate-950">Repetidas cargadas</h2>
+      <p class="text-sm text-slate-600">Filtra por prefijo o busca una ficha específica para revisar cantidades.</p>
+    </div>
+
+    <div class="flex flex-wrap gap-3 text-sm font-medium">
+      <span class="rounded-full bg-emerald-100 px-4 py-2 text-emerald-900"><%= @duplicate_copies_count %> copias</span>
+      <span class="rounded-full bg-slate-100 px-4 py-2 text-slate-700"><%= @duplicate_items_count %> fichas</span>
+    </div>
+  </div>
+
+  <%= form_with url: dashboard_path, method: :get, class: "mt-5 grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto_auto] sm:items-end" do %>
+    <%= hidden_field_tag :duplicate_mode, @duplicate_mode %>
+
+    <div class="space-y-2">
+      <%= label_tag :duplicate_prefix, "Prefijo", class: "block text-sm font-medium text-slate-700" %>
+      <%= select_tag :duplicate_prefix,
+                     options_for_select([["Todos", nil]] + @duplicate_prefixes.map { |prefix| [prefix, prefix] }, @duplicate_prefix),
+                     class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+    </div>
+
+    <div class="space-y-2">
+      <%= label_tag :duplicate_code, "Ficha específica", class: "block text-sm font-medium text-slate-700" %>
+      <%= text_field_tag :duplicate_code, @duplicate_code, placeholder: "ARG1", autocomplete: "off", class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm uppercase text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+    </div>
+
+    <%= submit_tag "Filtrar", class: "inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950" %>
+    <%= link_to "Limpiar", dashboard_path(duplicate_mode: @duplicate_mode), class: "inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950" %>
+  <% end %>
+
+  <% if @duplicate_items.any? %>
+    <ul class="mt-5 space-y-3">
+      <% @duplicate_items.each do |item| %>
+        <% quantity_field_id = dom_id(item, :quantity) %>
+        <li class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div class="flex items-center gap-3">
+                <p class="font-medium text-slate-900"><%= item.code %></p>
+                <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-900">x<%= item.quantity %></span>
+              </div>
+              <p class="mt-1 text-sm text-slate-600"><%= item.sticker.name %></p>
+            </div>
+
+            <%= form_with model: item, url: inventory_item_path(item), method: :patch, class: "grid gap-3 sm:grid-cols-[9rem_auto] sm:items-end" do |form| %>
+              <div class="space-y-2">
+                <%= form.label :quantity, "Cantidad para #{item.code}", for: quantity_field_id, class: "block text-sm font-medium text-slate-700" %>
+                <%= form.number_field :quantity, id: quantity_field_id, value: item.quantity, min: 0, step: 1, class: "block w-full rounded-2xl border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+              </div>
+              <%= form.submit "Actualizar", class: "inline-flex items-center justify-center rounded-2xl border border-emerald-200 bg-white px-4 py-3 font-medium text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-50" %>
+            <% end %>
+          </div>
+          <p class="mt-3 text-xs text-slate-500">Usa 0 si ya no te queda ninguna copia.</p>
+        </li>
+      <% end %>
+    </ul>
+
+    <% if @duplicate_pages > 1 %>
+      <div class="mt-5 flex items-center justify-between gap-4 border-t border-slate-200 pt-4 text-sm text-slate-600">
+        <%= link_to_if @duplicate_page > 1,
+                       "Anterior",
+                       dashboard_path(@duplicate_filters.merge(duplicates_page: @duplicate_page - 1)),
+                       class: "rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" do %>
+          <span class="rounded-full border border-slate-100 px-4 py-2 text-slate-300">Anterior</span>
+        <% end %>
+
+        <span>Página <%= @duplicate_page %> de <%= @duplicate_pages %></span>
+
+        <%= link_to_if @duplicate_page < @duplicate_pages,
+                       "Siguiente",
+                       dashboard_path(@duplicate_filters.merge(duplicates_page: @duplicate_page + 1)),
+                       class: "rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" do %>
+          <span class="rounded-full border border-slate-100 px-4 py-2 text-slate-300">Siguiente</span>
+        <% end %>
+      </div>
+    <% end %>
+  <% else %>
+    <p class="mt-5 text-sm text-slate-600">No hay repetidas que coincidan con ese filtro.</p>
+  <% end %>
+</section>

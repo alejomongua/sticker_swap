@@ -10,29 +10,29 @@ class InventoryItemsController < ApplicationController
     if result.success?
       message = "Inventario actualizado."
       message += " No se encontraron: #{result.unknown_codes.join(', ')}." if result.unknown_codes.any?
-      redirect_to dashboard_path, notice: message
+      redirect_to dashboard_return_location(duplicate_mode: params[:duplicate_mode]), notice: message, status: :see_other
     else
-      redirect_to dashboard_path, alert: result.error_message
+      redirect_to dashboard_return_location(duplicate_mode: params[:duplicate_mode]), alert: result.error_message, status: :see_other
     end
   end
 
   def update
     inventory_item = current_user.inventory_items.find(params[:id])
 
-    return redirect_to dashboard_path, alert: "Solo puedes ajustar la cantidad de tus repetidas." unless inventory_item.duplicate?
+    return redirect_to(dashboard_return_location, alert: "Solo puedes ajustar la cantidad de tus repetidas.", status: :see_other) unless inventory_item.duplicate?
 
     quantity = Integer(update_params[:quantity], exception: false)
-    return redirect_to dashboard_path, alert: "La cantidad debe ser un entero de 0 o más." if quantity.nil? || quantity.negative?
+    return redirect_to(dashboard_return_location, alert: "La cantidad debe ser un entero de 0 o más.", status: :see_other) if quantity.nil? || quantity.negative?
 
     if quantity.zero?
       inventory_item.destroy!
-      redirect_to dashboard_path, notice: "La repetida se quitó de tu inventario."
+      redirect_to dashboard_return_location, notice: "La repetida se quitó de tu inventario.", status: :see_other
     else
       inventory_item.update!(quantity: quantity)
-      redirect_to dashboard_path, notice: "La cantidad de repetidas se actualizó."
+      redirect_to dashboard_return_location, notice: "La cantidad de repetidas se actualizó.", status: :see_other
     end
   rescue ActiveRecord::RecordInvalid => error
-    redirect_to dashboard_path, alert: error.record.errors.full_messages.to_sentence
+    redirect_to dashboard_return_location, alert: error.record.errors.full_messages.to_sentence, status: :see_other
   end
 
   def destroy
@@ -49,12 +49,30 @@ class InventoryItemsController < ApplicationController
     end
 
     def submitted_codes
-      return inventory_item_params[:code] if inventory_item_params[:status] == "duplicate"
+      return inventory_item_params[:codes].presence || inventory_item_params[:code] if inventory_item_params[:status] == "duplicate"
 
       inventory_item_params[:codes]
     end
 
     def update_params
       params.require(:inventory_item).permit(:quantity)
+    end
+
+    def dashboard_return_location(extra_params = {})
+      referer = request.referer.to_s
+      query_params = dashboard_query_params_from(referer).merge(extra_params.to_h.stringify_keys).compact_blank
+
+      dashboard_path(query_params)
+    end
+
+    def dashboard_query_params_from(referer)
+      return {} if referer.blank?
+
+      uri = URI.parse(referer)
+      return {} unless [ root_path, dashboard_path ].include?(uri.path)
+
+      Rack::Utils.parse_nested_query(uri.query).slice("duplicate_prefix", "duplicate_code", "duplicate_mode", "duplicates_page")
+    rescue URI::InvalidURIError
+      {}
     end
 end

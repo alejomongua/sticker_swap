@@ -7,6 +7,13 @@ RSpec.describe StickerSwap::RuntimeConfig do
     ENV.delete("BREVO_API_KEY")
     ENV.delete("BREVO_DEBUG")
     ENV.delete("MAILERSEND_API_TOKEN")
+    ENV.delete("SMTP_ADDRESS")
+    ENV.delete("SMTP_PORT")
+    ENV.delete("SMTP_DOMAIN")
+    ENV.delete("SMTP_USERNAME")
+    ENV.delete("SMTP_PASSWORD")
+    ENV.delete("SMTP_AUTHENTICATION")
+    ENV.delete("SMTP_ENABLE_STARTTLS_AUTO")
 
     example.run
   ensure
@@ -34,6 +41,35 @@ RSpec.describe StickerSwap::RuntimeConfig do
       expect(described_class.email_delivery_provider).to eq("mailersend")
       expect(described_class.mailersend_enabled?).to be(true)
       expect(described_class.mailersend_api_token).to eq("mailersend-token")
+    end
+
+    it "supports SMTP explicitly" do
+      ENV["EMAIL_DELIVERY_PROVIDER"] = "smtp"
+      ENV["SMTP_ADDRESS"] = "smtp.example.com"
+      ENV["SMTP_PORT"] = "2525"
+      ENV["SMTP_DOMAIN"] = "example.com"
+      ENV["SMTP_USERNAME"] = "mailer"
+      ENV["SMTP_PASSWORD"] = "secret"
+      ENV["SMTP_AUTHENTICATION"] = "login"
+      ENV["SMTP_ENABLE_STARTTLS_AUTO"] = "false"
+
+      expect(described_class.email_delivery_provider).to eq("smtp")
+      expect(described_class.smtp_enabled?).to be(true)
+      expect(described_class.smtp_settings).to eq(
+        address: "smtp.example.com",
+        port: 2525,
+        domain: "example.com",
+        user_name: "mailer",
+        password: "secret",
+        authentication: :login,
+        enable_starttls_auto: false
+      )
+    end
+
+    it "infers SMTP when SMTP_ADDRESS is present" do
+      ENV["SMTP_ADDRESS"] = "smtp.example.com"
+
+      expect(described_class.email_delivery_provider).to eq("smtp")
     end
 
     it "rejects unknown providers" do

@@ -13,18 +13,20 @@ class InventoryBulkUpsert
   end
 
   def call
-    return Result.new(saved_count: 0, unknown_codes: [], error_message: "Debes ingresar al menos una figura.") if parsed_codes.empty?
+    return Result.new(saved_count: 0, unknown_codes: [], error_message: "Debes ingresar al menos una figura.") if parsed_code_counts.empty?
     return Result.new(saved_count: 0, unknown_codes: [], error_message: "El estado del inventario no es válido.") unless InventoryItem.statuses.key?(status)
     return Result.new(saved_count: 0, unknown_codes: [], error_message: "La cantidad debe ser un entero mayor a 0.") if duplicate? && parsed_quantity.nil?
 
-    stickers_by_code = parsed_codes.index_with { |code| Sticker.find_by_code(code) }
+    stickers_by_code = parsed_code_counts.keys.index_with { |code| Sticker.find_by_code(code) }
     unknown_codes = stickers_by_code.select { |_code, sticker| sticker.nil? }.keys
 
     InventoryItem.transaction do
-      stickers_by_code.values.compact.each do |sticker|
+      stickers_by_code.each do |code, sticker|
+        next if sticker.nil?
+
         inventory_item = user.inventory_items.find_or_initialize_by(sticker: sticker)
         inventory_item.status = status
-        inventory_item.quantity = next_quantity_for(inventory_item)
+        inventory_item.quantity = next_quantity_for(inventory_item, occurrences: parsed_code_counts.fetch(code))
         inventory_item.save!
       end
     end
@@ -41,11 +43,12 @@ class InventoryBulkUpsert
       status == "duplicate"
     end
 
-    def next_quantity_for(inventory_item)
+    def next_quantity_for(inventory_item, occurrences: 1)
       return 1 unless duplicate?
-      return parsed_quantity if inventory_item.new_record? || inventory_item.missing?
+      increment = parsed_quantity * occurrences
+      return increment if inventory_item.new_record? || inventory_item.missing?
 
-      inventory_item.quantity + parsed_quantity
+      inventory_item.quantity + increment
     end
 
     def parsed_quantity
@@ -55,7 +58,9 @@ class InventoryBulkUpsert
       end
     end
 
-    def parsed_codes
-      @parsed_codes ||= codes.to_s.upcase.scan(/[A-Z]*\s*-?\s*\d+/).map { |token| token.gsub(/[^A-Z0-9]/, "") }.uniq
+    def parsed_code_counts
+      @parsed_code_counts ||= codes.to_s.upcase.scan(/[A-Z]*\s*-?\s*\d+/)
+                                   .map { |token| token.gsub(/[^A-Z0-9]/, "") }
+                                   .tally
     end
 end

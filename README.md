@@ -65,6 +65,7 @@ El proveedor transaccional se controla con `EMAIL_DELIVERY_PROVIDER`.
 - `file`: no envía a un proveedor externo y deja los correos en `tmp/mails` en desarrollo.
 - `brevo`: usa `BREVO_API_KEY`.
 - `mailersend`: usa `MAILERSEND_API_TOKEN`.
+- `smtp`: usa `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_DOMAIN`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_AUTHENTICATION` y `SMTP_ENABLE_STARTTLS_AUTO`.
 
 Si vas a usar SSL en Docker, deja tu certificado y tu clave privada dentro de `config/ssl`. Ese directorio está ignorado por git.
 
@@ -139,9 +140,16 @@ Con SSL activado, la URL habitual pasa a ser `https://tu-dominio:8443` o al puer
 - `APP_PROTOCOL`: `http` o `https`.
 - `APP_PORT`: puerto externo que Rails debe usar al construir URLs.
 - `REGISTRATION_CODE`: código de invitación multiuso vigente para nuevos registros.
-- `EMAIL_DELIVERY_PROVIDER`: `file`, `brevo` o `mailersend`.
+- `EMAIL_DELIVERY_PROVIDER`: `file`, `brevo`, `mailersend` o `smtp`.
 - `BREVO_API_KEY`: token de la API transaccional de Brevo.
 - `MAILERSEND_API_TOKEN`: token de la API transaccional.
+- `SMTP_ADDRESS`: host del servidor SMTP.
+- `SMTP_PORT`: puerto del servidor SMTP.
+- `SMTP_DOMAIN`: dominio HELO/EHLO que envía Rails.
+- `SMTP_USERNAME`: usuario del servidor SMTP.
+- `SMTP_PASSWORD`: contraseña del servidor SMTP.
+- `SMTP_AUTHENTICATION`: mecanismo de autenticación SMTP, por ejemplo `plain` o `login`.
+- `SMTP_ENABLE_STARTTLS_AUTO`: activa STARTTLS cuando el servidor lo soporta.
 - `MAILER_FROM`: remitente por defecto para los correos.
 - `NGINX_SSL_ENABLED`: activa la configuración HTTPS en Nginx.
 - `NGINX_SSL_CERTIFICATE`: ruta del certificado dentro del contenedor Nginx.

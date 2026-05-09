@@ -1,117 +1,116 @@
 <% content_for :title, "Panel" %>
 
-<div class="space-y-8">
-  <div class="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50 sm:flex-row sm:items-end sm:justify-between">
-    <div class="space-y-2">
-      <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Tu inventario</h1>
-      <p class="text-sm text-slate-600">Carga las figuras que te faltan y las que tienes repetidas.</p>
-    </div>
+<%= turbo_frame_tag "dashboard_panel" do %>
+  <div class="space-y-8">
+    <%= render "shared/flash" if turbo_frame_request? %>
 
-    <div class="flex flex-wrap gap-3 text-sm font-medium">
-      <div class="rounded-full bg-amber-100 px-4 py-2 text-amber-900">Faltantes: <%= @missing_items.size %></div>
-      <div class="rounded-full bg-emerald-100 px-4 py-2 text-emerald-900">Repetidas: <%= @duplicate_copies_count %></div>
-    </div>
-  </div>
+    <%= render "inventory_summary" %>
 
-  <div class="grid gap-6 lg:grid-cols-2">
-    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
-      <div class="space-y-2">
-        <h2 class="text-xl font-semibold text-slate-950">Agregar faltantes</h2>
-        <p class="text-sm text-slate-600">Pega códigos separados por coma, espacio o salto de línea. Ejemplo: <span class="font-medium text-slate-800">ARG1, ARG2, FW3</span></p>
-      </div>
-
-      <%= form_with model: InventoryItem.new, url: inventory_items_path, class: "mt-5 space-y-4" do |form| %>
-        <%= form.hidden_field :status, value: :missing %>
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
         <div class="space-y-2">
-          <%= form.label :codes, "Figuras faltantes", for: "missing_inventory_codes", class: "block text-sm font-medium text-slate-700" %>
-          <%= form.text_area :codes, id: "missing_inventory_codes", rows: 6, class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+          <h2 class="text-xl font-semibold text-slate-950">Agregar faltantes</h2>
+          <p class="text-sm text-slate-600">Pega códigos separados por coma, espacio o salto de línea. Ejemplo: <span class="font-medium text-slate-800">ARG1, ARG2, FWC3</span></p>
         </div>
 
-        <%= form.submit "Guardar faltantes", class: "inline-flex items-center justify-center rounded-2xl bg-amber-500 px-5 py-3 font-medium text-white transition hover:bg-amber-600" %>
-      <% end %>
-    </div>
+        <%= form_with model: InventoryItem.new, url: inventory_items_path, class: "mt-5 space-y-4" do |form| %>
+          <%= form.hidden_field :status, value: :missing %>
+          <div class="space-y-2">
+            <%= form.label :codes, "Figuras faltantes", for: "missing_inventory_codes", class: "block text-sm font-medium text-slate-700" %>
+            <%= form.text_area :codes, id: "missing_inventory_codes", rows: 6, class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+          </div>
 
-    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
-      <div class="space-y-2">
-        <h2 class="text-xl font-semibold text-slate-950">Agregar repetidas</h2>
-        <p class="text-sm text-slate-600">Carga una figura por vez y suma la cantidad de copias que tienes disponibles.</p>
+          <%= form.submit "Guardar faltantes", class: "inline-flex items-center justify-center rounded-2xl bg-amber-500 px-5 py-3 font-medium text-white transition hover:bg-amber-600" %>
+        <% end %>
       </div>
 
-      <%= form_with model: InventoryItem.new, url: inventory_items_path, class: "mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem_auto] sm:items-end" do |form| %>
-        <%= form.hidden_field :status, value: :duplicate %>
+      <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
         <div class="space-y-2">
-          <%= label_tag "duplicate_inventory_code", "Código de la figura", class: "block text-sm font-medium text-slate-700" %>
-          <%= text_field_tag "inventory_item[code]", nil, id: "duplicate_inventory_code", placeholder: "ARG1", autocomplete: "off", class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm uppercase text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
-        </div>
-        <div class="space-y-2">
-          <%= label_tag "duplicate_inventory_quantity", "Repeticiones", class: "block text-sm font-medium text-slate-700" %>
-          <%= number_field_tag "inventory_item[quantity]", 1, id: "duplicate_inventory_quantity", min: 1, step: 1, class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+          <h2 class="text-xl font-semibold text-slate-950">Agregar repetidas</h2>
+          <p class="text-sm text-slate-600">Usa el modo individual para ajustar cantidad o el modo masivo para pegar varias fichas y sumar una copia por cada aparición.</p>
         </div>
 
-        <%= form.submit "Agregar repetida", class: "inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-white transition hover:bg-emerald-700" %>
-      <% end %>
+        <%= form_with model: InventoryItem.new, url: inventory_items_path, class: "mt-5 space-y-4", data: { controller: "duplicate-form" } do |form| %>
+          <%= form.hidden_field :status, value: :duplicate %>
+
+          <div class="space-y-2">
+            <%= label_tag :duplicate_mode, "Modo de carga", class: "block text-sm font-medium text-slate-700" %>
+            <%= select_tag :duplicate_mode,
+                           options_for_select([["Individual", "single"], ["Masivo", "bulk"]], @duplicate_mode),
+                           class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700",
+                           data: { action: "change->duplicate-form#sync", duplicate_form_target: "mode" } %>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem_auto] sm:items-end <%= "hidden" if @duplicate_mode == "bulk" %>" data-duplicate-form-target="singlePanel">
+            <div class="space-y-2">
+              <%= label_tag "duplicate_inventory_code", "Código de la figura", class: "block text-sm font-medium text-slate-700" %>
+              <%= text_field_tag "inventory_item[code]", nil,
+                                 id: "duplicate_inventory_code",
+                                 placeholder: "ARG1",
+                                 autocomplete: "off",
+                                 disabled: @duplicate_mode == "bulk",
+                                 class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm uppercase text-slate-950 focus:border-accent-700 focus:ring-accent-700",
+                                 data: { duplicate_form_target: "singleCode" } %>
+            </div>
+
+            <div class="space-y-2">
+              <%= label_tag "duplicate_inventory_quantity", "Repeticiones", class: "block text-sm font-medium text-slate-700" %>
+              <%= number_field_tag "inventory_item[quantity]", 1,
+                                   id: "duplicate_inventory_quantity",
+                                   min: 1,
+                                   step: 1,
+                                   disabled: @duplicate_mode == "bulk",
+                                   class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700",
+                                   data: { duplicate_form_target: "singleQuantity" } %>
+            </div>
+
+            <%= form.submit "Agregar repetida", class: "inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-white transition hover:bg-emerald-700" %>
+          </div>
+
+          <div class="space-y-4 <%= "hidden" unless @duplicate_mode == "bulk" %>" data-duplicate-form-target="bulkPanel">
+            <div class="space-y-2">
+              <%= form.label :codes, "Fichas repetidas", for: "duplicate_inventory_codes", class: "block text-sm font-medium text-slate-700" %>
+              <%= form.text_area :codes,
+                                 id: "duplicate_inventory_codes",
+                                 rows: 6,
+                                 disabled: @duplicate_mode != "bulk",
+                                 class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm uppercase text-slate-950 focus:border-accent-700 focus:ring-accent-700",
+                                 data: { duplicate_form_target: "bulkCodes" } %>
+              <p class="text-xs text-slate-500">Acepta comas, espacios o saltos de línea. Si una ficha aparece dos veces, suma dos copias.</p>
+            </div>
+
+            <%= hidden_field_tag "inventory_item[quantity]", 1, disabled: @duplicate_mode != "bulk", data: { duplicate_form_target: "bulkQuantity" } %>
+            <%= form.submit "Agregar repetidas", class: "inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-white transition hover:bg-emerald-700" %>
+          </div>
+        <% end %>
+      </div>
     </div>
-  </div>
 
-  <div class="grid gap-6 lg:grid-cols-2">
-    <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
-      <div class="flex items-center justify-between gap-3">
-        <h2 class="text-xl font-semibold text-slate-950">Faltantes cargadas</h2>
-        <span class="text-sm text-slate-500"><%= @missing_items.size %> en total</span>
-      </div>
+    <div class="grid gap-6 lg:grid-cols-2">
+      <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-xl font-semibold text-slate-950">Faltantes cargadas</h2>
+          <span class="text-sm text-slate-500"><%= @missing_items.size %> en total</span>
+        </div>
 
-      <% if @missing_items.any? %>
-        <ul class="mt-5 space-y-3">
-          <% @missing_items.each do |item| %>
-            <li class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <div>
-                <p class="font-medium text-slate-900"><%= item.code %></p>
-                <p class="text-sm text-slate-600"><%= item.sticker.name %></p>
-              </div>
-              <%= button_to "Marcar conseguida", inventory_item_path(item), method: :delete, class: "rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" %>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="mt-5 text-sm text-slate-600">Todavía no cargaste faltantes.</p>
-      <% end %>
-    </section>
-
-    <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
-      <div class="flex items-center justify-between gap-3">
-        <h2 class="text-xl font-semibold text-slate-950">Repetidas cargadas</h2>
-        <span class="text-sm text-slate-500"><%= @duplicate_copies_count %> copias en total</span>
-      </div>
-
-      <% if @duplicate_items.any? %>
-        <ul class="mt-5 space-y-3">
-          <% @duplicate_items.each do |item| %>
-            <% quantity_field_id = dom_id(item, :quantity) %>
-            <li class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <% if @missing_items.any? %>
+          <ul class="mt-5 space-y-3">
+            <% @missing_items.each do |item| %>
+              <li class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <div>
-                  <div class="flex items-center gap-3">
-                    <p class="font-medium text-slate-900"><%= item.code %></p>
-                    <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-900">x<%= item.quantity %></span>
-                  </div>
-                  <p class="mt-1 text-sm text-slate-600"><%= item.sticker.name %></p>
+                  <p class="font-medium text-slate-900"><%= item.code %></p>
+                  <p class="text-sm text-slate-600"><%= item.sticker.name %></p>
                 </div>
+                <%= button_to "Marcar conseguida", inventory_item_path(item), method: :delete, class: "rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="mt-5 text-sm text-slate-600">Todavía no cargaste faltantes.</p>
+        <% end %>
+      </section>
 
-                <%= form_with model: item, url: inventory_item_path(item), method: :patch, class: "grid gap-3 sm:grid-cols-[9rem_auto] sm:items-end" do |form| %>
-                  <div class="space-y-2">
-                    <%= form.label :quantity, "Cantidad para #{item.code}", for: quantity_field_id, class: "block text-sm font-medium text-slate-700" %>
-                    <%= form.number_field :quantity, id: quantity_field_id, value: item.quantity, min: 0, step: 1, class: "block w-full rounded-2xl border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
-                  </div>
-                  <%= form.submit "Actualizar", class: "inline-flex items-center justify-center rounded-2xl border border-emerald-200 bg-white px-4 py-3 font-medium text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-50" %>
-                <% end %>
-              </div>
-              <p class="mt-3 text-xs text-slate-500">Usa 0 si ya no te queda ninguna copia.</p>
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="mt-5 text-sm text-slate-600">Todavía no cargaste repetidas.</p>
-      <% end %>
-    </section>
+      <%= render "duplicate_inventory" %>
+    </div>
   </div>
-</div>
+<% end %>

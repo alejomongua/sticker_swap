@@ -54,6 +54,9 @@ Rails.application.configure do
     config.action_mailer.mailersend_settings = {
       api_token: StickerSwap::RuntimeConfig.mailersend_api_token
     }
+  elsif StickerSwap::RuntimeConfig.smtp_enabled?
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = StickerSwap::RuntimeConfig.smtp_settings
   else
     config.action_mailer.delivery_method = :file
     config.action_mailer.file_settings = { location: Rails.root.join("tmp/mails") }

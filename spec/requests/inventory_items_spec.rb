@@ -32,6 +32,29 @@ RSpec.describe 'InventoryItems', type: :request do
       expect(user.inventory_items.find_by!(sticker: sticker).quantity).to eq(5)
     end
 
+    it 'imports duplicate codes from bulk input, ignores unknown codes, and counts repeated entries' do
+      user = create(:user)
+      arg = create(:sticker, prefix: 'ARG', number: 1, name: 'Argentina', group_name: 'Grupo J')
+      bra = create(:sticker, prefix: 'BRA', number: 2, name: 'Brasil', group_name: 'Grupo C')
+
+      sign_in_as(user)
+
+      expect do
+        post inventory_items_path, params: {
+          inventory_item: {
+            status: 'duplicate',
+            codes: "ARG1, BRA2 ARG1\nXXX9",
+            quantity: 1
+          }
+        }
+      end.to change(user.inventory_items, :count).by(2)
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(flash[:notice]).to include('No se encontraron: XXX9.')
+      expect(user.inventory_items.find_by!(sticker: arg).quantity).to eq(2)
+      expect(user.inventory_items.find_by!(sticker: bra).quantity).to eq(1)
+    end
+
     it 'rejects invalid duplicate quantity' do
       user = create(:user)
       create(:sticker, prefix: 'ARG', number: 1, name: 'Argentina', group_name: 'Grupo J')

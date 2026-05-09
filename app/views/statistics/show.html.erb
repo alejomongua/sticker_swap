@@ -1,0 +1,52 @@
+<% content_for :title, "Estadísticas" %>
+
+<div class="space-y-8">
+  <div class="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50 sm:flex-row sm:items-end sm:justify-between">
+    <div class="space-y-2">
+      <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Estadísticas del álbum</h1>
+      <p class="text-sm text-slate-600">Basadas en las repetidas y faltantes cargadas por <%= @eligible_users_count %> usuarios con inventario completo.</p>
+    </div>
+
+    <%= link_to "Volver al panel", dashboard_path, class: "inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950" %>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
+      <div class="space-y-2">
+        <h2 class="text-xl font-semibold text-slate-950">Más fáciles</h2>
+        <p class="text-sm text-slate-600">Fichas con mayor cantidad de copias repetidas entre todos los usuarios.</p>
+      </div>
+
+      <ol class="mt-5 space-y-3">
+        <% @easiest_stickers.each_with_index do |entry, index| %>
+          <li class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div>
+              <p class="font-medium text-slate-900"><%= index + 1 %>. <%= entry.sticker.code %></p>
+              <p class="text-sm text-slate-600"><%= entry.sticker.name %></p>
+            </div>
+            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-900"><%= pluralize(entry.total, "copia", "copias") %></span>
+          </li>
+        <% end %>
+      </ol>
+    </section>
+
+    <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
+      <div class="space-y-2">
+        <h2 class="text-xl font-semibold text-slate-950">Más difíciles</h2>
+        <p class="text-sm text-slate-600">Fichas que aparecen como faltantes con mayor frecuencia.</p>
+      </div>
+
+      <ol class="mt-5 space-y-3">
+        <% @hardest_stickers.each_with_index do |entry, index| %>
+          <li class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div>
+              <p class="font-medium text-slate-900"><%= index + 1 %>. <%= entry.sticker.code %></p>
+              <p class="text-sm text-slate-600"><%= entry.sticker.name %></p>
+            </div>
+            <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-900"><%= pluralize(entry.total, "faltante", "faltantes") %></span>
+          </li>
+        <% end %>
+      </ol>
+    </section>
+  </div>
+</div>

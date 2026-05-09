@@ -1,6 +1,6 @@
 module StickerSwap
   module RuntimeConfig
-    EMAIL_DELIVERY_PROVIDERS = %w[ file brevo mailersend ].freeze
+    EMAIL_DELIVERY_PROVIDERS = %w[ file brevo mailersend smtp ].freeze
 
     module_function
 
@@ -66,7 +66,7 @@ module StickerSwap
     end
 
     def transactional_email_enabled?
-      %w[ brevo mailersend ].include?(email_delivery_provider)
+      %w[ brevo mailersend smtp ].include?(email_delivery_provider)
     end
 
     def brevo_enabled?
@@ -75,6 +75,10 @@ module StickerSwap
 
     def mailersend_enabled?
       email_delivery_provider == "mailersend"
+    end
+
+    def smtp_enabled?
+      email_delivery_provider == "smtp"
     end
 
     def brevo_api_key
@@ -98,6 +102,22 @@ module StickerSwap
             "MAILERSEND_API_TOKEN must be set when EMAIL_DELIVERY_PROVIDER=mailersend"
     end
 
+    def smtp_settings
+      return {} unless smtp_enabled?
+
+      validate_smtp_credentials!
+
+      {
+        address: smtp_address,
+        port: smtp_port,
+        domain: smtp_domain,
+        user_name: smtp_username,
+        password: smtp_password,
+        authentication: smtp_authentication,
+        enable_starttls_auto: smtp_enable_starttls_auto?
+      }.compact
+    end
+
     def force_ssl?
       app_protocol == "https"
     end
@@ -105,6 +125,7 @@ module StickerSwap
     def inferred_email_delivery_provider
       return "brevo" if !ENV["BREVO_API_KEY"].to_s.strip.empty?
       return "mailersend" if !ENV["MAILERSEND_API_TOKEN"].to_s.strip.empty?
+      return "smtp" if !ENV["SMTP_ADDRESS"].to_s.strip.empty?
 
       "file"
     end
@@ -123,5 +144,69 @@ module StickerSwap
       true
     end
     private_class_method :include_port?
+
+    def smtp_address
+      value = ENV["SMTP_ADDRESS"].to_s.strip
+      return value unless value.empty?
+      return nil unless smtp_enabled?
+
+      raise KeyError, "SMTP_ADDRESS must be set when EMAIL_DELIVERY_PROVIDER=smtp"
+    end
+    private_class_method :smtp_address
+
+    def smtp_port
+      value = ENV["SMTP_PORT"].to_s.strip
+      value = "587" if value.empty?
+
+      port = Integer(value, exception: false)
+      return port if port&.positive?
+
+      raise ArgumentError, "SMTP_PORT must be a positive integer"
+    end
+    private_class_method :smtp_port
+
+    def smtp_domain
+      value = ENV["SMTP_DOMAIN"].to_s.strip
+      return value unless value.empty?
+
+      app_domain
+    end
+    private_class_method :smtp_domain
+
+    def smtp_username
+      value = ENV["SMTP_USERNAME"].to_s.strip
+      value.presence
+    end
+    private_class_method :smtp_username
+
+    def smtp_password
+      value = ENV["SMTP_PASSWORD"].to_s.strip
+      value.presence
+    end
+    private_class_method :smtp_password
+
+    def smtp_authentication
+      value = ENV["SMTP_AUTHENTICATION"].to_s.strip
+      return value.downcase.to_sym unless value.empty?
+      return :plain if smtp_username.present?
+
+      nil
+    end
+    private_class_method :smtp_authentication
+
+    def smtp_enable_starttls_auto?
+      value = ENV["SMTP_ENABLE_STARTTLS_AUTO"].to_s.strip
+      return true if value.empty?
+
+      ActiveModel::Type::Boolean.new.cast(value)
+    end
+    private_class_method :smtp_enable_starttls_auto?
+
+    def validate_smtp_credentials!
+      return if smtp_username.present? == smtp_password.present?
+
+      raise KeyError, "SMTP_USERNAME and SMTP_PASSWORD must both be set when EMAIL_DELIVERY_PROVIDER=smtp"
+    end
+    private_class_method :validate_smtp_credentials!
   end
 end
