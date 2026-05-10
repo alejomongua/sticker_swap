@@ -12,7 +12,7 @@ class Sticker < ApplicationRecord
     BRA
     MAR
     HAI
-    SC0
+    SCO
     USA
     PAR
     AUS

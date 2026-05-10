@@ -39,6 +39,17 @@ RSpec.describe User, type: :model do
 
       expect(user.duplicate_codes_text).to eq('ZZTA10001, ZZTA10002, ZZTA10002, ZZTB10001')
     end
+
+    it 'keeps SCO before PAN in exports' do
+      user = create(:user)
+      pan = create(:sticker, prefix: 'PAN', number: 15, group_name: 'Grupo QC')
+      sco = create(:sticker, prefix: 'SCO', number: 7, group_name: 'Grupo QC')
+
+      create(:inventory_item, :duplicate, user: user, sticker: pan, quantity: 1)
+      create(:inventory_item, :duplicate, user: user, sticker: sco, quantity: 1)
+
+      expect(user.duplicate_codes_text).to eq('SCO7, PAN15')
+    end
   end
 
   describe '#missing_codes_text' do
