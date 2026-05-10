@@ -13,7 +13,7 @@ class InventoryStatisticsQuery
   def easiest(limit: DEFAULT_LIMIT)
     aggregated_stickers_for(
       InventoryItem.duplicate,
-      "SUM(inventory_items.quantity)",
+      InventoryItem.arel_table[:quantity].sum,
       limit: limit
     )
   end
@@ -21,7 +21,7 @@ class InventoryStatisticsQuery
   def hardest(limit: DEFAULT_LIMIT)
     aggregated_stickers_for(
       InventoryItem.missing,
-      "COUNT(inventory_items.id)",
+      InventoryItem.arel_table[:id].count,
       limit: limit
     )
   end
@@ -34,10 +34,10 @@ class InventoryStatisticsQuery
   end
 
   private
-    def aggregated_stickers_for(scope, aggregate_sql, limit:)
+    def aggregated_stickers_for(scope, aggregate_expression, limit:)
       Sticker.joins(:inventory_items)
              .merge(scope)
-             .select("stickers.*, #{aggregate_sql} AS aggregate_total")
+             .select(Sticker.arel_table[Arel.star], aggregate_expression.as("aggregate_total"))
              .group("stickers.id")
              .order(Arel.sql("aggregate_total DESC"), :group_name, :prefix, :number)
              .limit(limit)
