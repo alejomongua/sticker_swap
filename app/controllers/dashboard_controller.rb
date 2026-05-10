@@ -39,16 +39,8 @@ class DashboardController < ApplicationController
 
     @duplicate_copies_count = current_user.inventory_items.duplicate.sum(:quantity)
     @missing_total_count = current_user.inventory_items.missing.count
-    @duplicate_prefixes = current_user.inventory_items.duplicate.joins(:sticker)
-                                      .distinct
-                                      .order("stickers.prefix ASC")
-                                      .pluck("stickers.prefix")
-                                      .compact_blank
-    @missing_prefixes = current_user.inventory_items.missing.joins(:sticker)
-                                    .distinct
-                                    .order("stickers.prefix ASC")
-                                    .pluck("stickers.prefix")
-                                    .compact_blank
+    @duplicate_prefixes = sorted_prefixes_for(current_user.inventory_items.duplicate)
+    @missing_prefixes = sorted_prefixes_for(current_user.inventory_items.missing)
     @progress_summary = progress_query.summary
     append_alert(inventory_conflicts_alert, now: true)
   end
@@ -108,5 +100,9 @@ class DashboardController < ApplicationController
     def prepare_missing_table_data
       @missing_items_by_sticker_id = current_user.missing_items.includes(:sticker).index_by(&:sticker_id)
       @stickers_by_prefix = Sticker.catalog_order.group_by(&:prefix)
+    end
+
+    def sorted_prefixes_for(scope)
+      Sticker.sorted_prefixes(scope.joins(:sticker).distinct.pluck("stickers.prefix"))
     end
 end

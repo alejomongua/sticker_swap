@@ -80,7 +80,7 @@ class User < ApplicationRecord
       items.flat_map do |inventory_item|
         occurrences = repeat_by_quantity ? inventory_item.quantity : 1
         Array.new(occurrences, inventory_item.code)
-      end.join(', ')
+      end.join(", ")
     end
 
     def active_group_must_belong_to_user

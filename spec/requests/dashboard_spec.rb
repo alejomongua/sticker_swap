@@ -2,6 +2,32 @@ require "rails_helper"
 
 RSpec.describe "Dashboard", type: :request do
   describe "GET /panel" do
+    it "orders the prefix filters using the configured catalog sequence" do
+      user = create(:user)
+      pan = create(:sticker, prefix: "PAN", number: 2, name: "Panama")
+      arg = create(:sticker, prefix: "ARG", number: 1, name: "Argentina")
+      mex = create(:sticker, prefix: "MEX", number: 3, name: "Mexico")
+      fwc = create(:sticker, prefix: "FWC", number: 4, name: "Mascota")
+
+      create(:inventory_item, user: user, sticker: pan)
+      create(:inventory_item, user: user, sticker: arg)
+      create(:inventory_item, user: user, sticker: mex)
+      create(:inventory_item, user: user, sticker: fwc)
+
+      sign_in_as(user)
+
+      get dashboard_path
+
+      fwc_index = response.body.index(%(<option value="FWC">FWC</option>))
+      mex_index = response.body.index(%(<option value="MEX">MEX</option>))
+      arg_index = response.body.index(%(<option value="ARG">ARG</option>))
+      pan_index = response.body.index(%(<option value="PAN">PAN</option>))
+
+      expect(fwc_index).to be < mex_index
+      expect(mex_index).to be < arg_index
+      expect(arg_index).to be < pan_index
+    end
+
     it "includes a full-page link to the interactive missing table" do
       user = create(:user)
       sign_in_as(user)
