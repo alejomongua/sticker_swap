@@ -32,6 +32,42 @@ RSpec.describe 'InventoryItems', type: :request do
       expect(user.inventory_items.find_by!(sticker: sticker).quantity).to eq(5)
     end
 
+    it 'alerts when a missing sticker is moved to duplicates and keeps the submitted quantity' do
+      user = create(:user)
+      sticker = create(:sticker, prefix: 'ARG', number: 1, name: 'Argentina', group_name: 'Grupo J')
+      create(:inventory_item, user: user, sticker: sticker)
+
+      sign_in_as(user)
+
+      expect do
+        post inventory_items_path, params: { inventory_item: { status: 'duplicate', code: 'ARG1', quantity: 2 } }
+      end.not_to change(user.inventory_items, :count)
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(flash[:alert]).to include('ARG1: de faltante a repetida')
+      item = user.inventory_items.find_by!(sticker: sticker)
+      expect(item).to be_duplicate
+      expect(item.quantity).to eq(2)
+    end
+
+    it 'alerts when a repeated sticker is moved to missing' do
+      user = create(:user)
+      sticker = create(:sticker, prefix: 'ARG', number: 1, name: 'Argentina', group_name: 'Grupo J')
+      create(:inventory_item, :duplicate, user: user, sticker: sticker, quantity: 3)
+
+      sign_in_as(user)
+
+      expect do
+        post inventory_items_path, params: { inventory_item: { status: 'missing', codes: 'ARG1' } }
+      end.not_to change(user.inventory_items, :count)
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(flash[:alert]).to include('ARG1: de repetida a faltante')
+      item = user.inventory_items.find_by!(sticker: sticker)
+      expect(item).to be_missing
+      expect(item.quantity).to eq(1)
+    end
+
     it 'imports duplicate codes from bulk input, ignores unknown codes, and counts repeated entries' do
       user = create(:user)
       arg = create(:sticker, prefix: 'ARG', number: 1, name: 'Argentina', group_name: 'Grupo J')

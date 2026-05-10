@@ -8,9 +8,10 @@ class InventoryItemsController < ApplicationController
     ).call
 
     if result.success?
-      message = "Inventario actualizado."
-      message += " No se encontraron: #{result.unknown_codes.join(', ')}." if result.unknown_codes.any?
-      redirect_to dashboard_return_location(duplicate_mode: params[:duplicate_mode]), notice: message, status: :see_other
+      flash[:notice] = success_message_for(result)
+      flash[:alert] = incoherence_alert_for(result.conflicts) if result.conflicts.any?
+
+      redirect_to dashboard_return_location(duplicate_mode: params[:duplicate_mode]), status: :see_other
     else
       redirect_to dashboard_return_location(duplicate_mode: params[:duplicate_mode]), alert: result.error_message, status: :see_other
     end
@@ -76,5 +77,23 @@ class InventoryItemsController < ApplicationController
                         "missing_prefix", "missing_code", "missing_page")
     rescue URI::InvalidURIError
       {}
+    end
+
+    def success_message_for(result)
+      message = "Inventario actualizado."
+      message += " No se encontraron: #{result.unknown_codes.join(', ')}." if result.unknown_codes.any?
+      message
+    end
+
+    def incoherence_alert_for(conflicts)
+      changes = conflicts.map do |conflict|
+        "#{conflict.code}: de #{human_inventory_status(conflict.previous_status)} a #{human_inventory_status(conflict.new_status)}"
+      end
+
+      "Posible incoherencia en tu inventario. Revisa #{changes.join(', ')}."
+    end
+
+    def human_inventory_status(status)
+      status == "duplicate" ? "repetida" : "faltante"
     end
 end
