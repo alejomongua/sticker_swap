@@ -1,11 +1,13 @@
 class SwapOffersController < ApplicationController
+  before_action :require_current_group!
+
   def index
-    @received_offers = current_user.received_swap_offers.includes(:sender, :offered_sticker, :requested_sticker).latest_first
-    @sent_offers = current_user.sent_swap_offers.includes(:receiver, :offered_sticker, :requested_sticker).latest_first
+    @received_offers = current_group.swap_offers.where(receiver: current_user).includes(:sender, :offered_sticker, :requested_sticker).latest_first
+    @sent_offers = current_group.swap_offers.where(sender: current_user).includes(:receiver, :offered_sticker, :requested_sticker).latest_first
   end
 
   def create
-    @swap_offer = current_user.sent_swap_offers.new(create_params.merge(status: :pending))
+    @swap_offer = current_user.sent_swap_offers.new(create_params.merge(group: current_group, status: :pending))
 
     if @swap_offer.save
       redirect_to matches_path, notice: "La propuesta se envió correctamente."
@@ -15,7 +17,7 @@ class SwapOffersController < ApplicationController
   end
 
   def accept
-    offer = current_user.received_swap_offers.find(params[:id])
+    offer = current_group.swap_offers.where(receiver: current_user).find(params[:id])
     offer.accept!
     redirect_to swap_offers_path, notice: "El intercambio fue aceptado y el inventario se actualizó."
   rescue SwapOfferAcceptance::InvalidState => error
@@ -23,7 +25,7 @@ class SwapOffersController < ApplicationController
   end
 
   def decline
-    offer = current_user.received_swap_offers.find(params[:id])
+    offer = current_group.swap_offers.where(receiver: current_user).find(params[:id])
     offer.decline!
     redirect_to swap_offers_path, notice: "La propuesta fue rechazada."
   rescue SwapOfferAcceptance::InvalidState => error

@@ -10,9 +10,30 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_09_153000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_10_103000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "group_memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "group_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["group_id", "user_id"], name: "index_group_memberships_on_group_id_and_user_id", unique: true
+    t.index ["group_id"], name: "index_group_memberships_on_group_id"
+    t.index ["user_id"], name: "index_group_memberships_on_user_id"
+  end
+
+  create_table "groups", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.datetime "created_at", null: false
+    t.string "invitation_code", null: false
+    t.string "name", null: false
+    t.boolean "registration_open", default: true, null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_user_id"], name: "index_groups_on_admin_user_id"
+    t.index ["invitation_code"], name: "index_groups_on_invitation_code", unique: true
+  end
 
   create_table "inventory_items", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -50,6 +71,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_153000) do
 
   create_table "swap_offers", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.bigint "group_id"
     t.bigint "offered_sticker_id", null: false
     t.bigint "receiver_id", null: false
     t.bigint "requested_sticker_id", null: false
@@ -57,6 +79,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_153000) do
     t.bigint "sender_id", null: false
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.index ["group_id"], name: "index_swap_offers_on_group_id"
     t.index ["offered_sticker_id"], name: "index_swap_offers_on_offered_sticker_id"
     t.index ["receiver_id", "status"], name: "index_swap_offers_on_receiver_id_and_status"
     t.index ["receiver_id"], name: "index_swap_offers_on_receiver_id"
@@ -66,21 +89,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_153000) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.bigint "active_group_id"
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.string "password_digest", null: false
     t.boolean "receive_offer_notifications", default: true, null: false
     t.datetime "updated_at", null: false
     t.string "username", null: false
+    t.index ["active_group_id"], name: "index_users_on_active_group_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 
+  add_foreign_key "group_memberships", "groups"
+  add_foreign_key "group_memberships", "users"
+  add_foreign_key "groups", "users", column: "admin_user_id"
   add_foreign_key "inventory_items", "stickers"
   add_foreign_key "inventory_items", "users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "swap_offers", "groups"
   add_foreign_key "swap_offers", "stickers", column: "offered_sticker_id"
   add_foreign_key "swap_offers", "stickers", column: "requested_sticker_id"
   add_foreign_key "swap_offers", "users", column: "receiver_id"
   add_foreign_key "swap_offers", "users", column: "sender_id"
+  add_foreign_key "users", "groups", column: "active_group_id"
 end

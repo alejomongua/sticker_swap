@@ -1,9 +1,11 @@
 <% content_for :title, "Crear cuenta" %>
 
+<% registration_mode = @registration_mode.presence || params.dig(:user, :registration_mode) || "join_group" %>
+
 <div class="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm shadow-slate-200/50">
   <div class="space-y-2">
     <h1 class="text-2xl font-semibold tracking-tight text-slate-950">Crear cuenta</h1>
-    <p class="text-sm text-slate-600">Necesitas un código de invitación válido para registrarte.</p>
+    <p class="text-sm text-slate-600">Únete a un grupo con código o crea el tuyo para administrar tus propios intercambios.</p>
   </div>
 
   <div class="mt-6">
@@ -23,9 +25,41 @@
       </div>
     </div>
 
-    <div class="space-y-2">
-      <%= label_tag :user_invitation_code, "Código de invitación", class: "block text-sm font-medium text-slate-700" %>
-      <%= text_field_tag "user[invitation_code]", params.dig(:user, :invitation_code), required: true, class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 uppercase tracking-wide text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
+    <div class="space-y-4 rounded-3xl border border-slate-200 p-5">
+      <div>
+        <h2 class="text-lg font-semibold text-slate-950">Cómo quieres empezar</h2>
+        <p class="mt-1 text-sm text-slate-600">Puedes entrar a un grupo existente o abrir uno nuevo para tus amigos.</p>
+      </div>
+
+      <div class="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <label class="flex items-start gap-3">
+          <%= radio_button_tag "user[registration_mode]", "join_group", registration_mode == "join_group", class: "mt-1 h-4 w-4 border-slate-300 text-accent-700 focus:ring-accent-700" %>
+          <span class="space-y-1">
+            <span class="block text-sm font-medium text-slate-900">Unirme con un código</span>
+            <span class="block text-sm text-slate-600">Ideal si el administrador del grupo ya te compartió acceso.</span>
+          </span>
+        </label>
+
+        <div class="space-y-2">
+          <%= label_tag :user_invitation_code, "Código de invitación", class: "block text-sm font-medium text-slate-700" %>
+          <%= text_field_tag "user[invitation_code]", params.dig(:user, :invitation_code), class: "block w-full rounded-2xl border-slate-200 bg-white px-4 py-3 uppercase tracking-wide text-slate-950 focus:border-accent-700 focus:ring-accent-700", placeholder: "OFICINA2026" %>
+        </div>
+      </div>
+
+      <div class="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <label class="flex items-start gap-3">
+          <%= radio_button_tag "user[registration_mode]", "create_group", registration_mode == "create_group", class: "mt-1 h-4 w-4 border-slate-300 text-accent-700 focus:ring-accent-700" %>
+          <span class="space-y-1">
+            <span class="block text-sm font-medium text-slate-900">Crear un grupo nuevo</span>
+            <span class="block text-sm text-slate-600">Tú quedas como administrador y luego podrás invitar a otras personas.</span>
+          </span>
+        </label>
+
+        <div class="space-y-2">
+          <%= label_tag :user_group_name, "Nombre del grupo", class: "block text-sm font-medium text-slate-700" %>
+          <%= text_field_tag "user[group_name]", params.dig(:user, :group_name), class: "block w-full rounded-2xl border-slate-200 bg-white px-4 py-3 text-slate-950 focus:border-accent-700 focus:ring-accent-700", placeholder: "Amigos de la oficina" %>
+        </div>
+      </div>
     </div>
 
     <div class="grid gap-4 sm:grid-cols-2">

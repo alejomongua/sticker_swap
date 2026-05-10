@@ -1,0 +1,145 @@
+<% content_for :title, "Grupos" %>
+
+<div class="space-y-6">
+  <div class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight text-slate-950">Grupos</h1>
+    <p class="text-sm text-slate-600">Cambia de contexto, crea grupos nuevos o administra el acceso de tus amigos.</p>
+  </div>
+
+  <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+    <section class="space-y-6">
+      <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm shadow-slate-200/50">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 class="text-xl font-semibold text-slate-950">Tus grupos</h2>
+            <p class="mt-1 text-sm text-slate-600">El grupo activo define con quién ves mercado, estadísticas e intercambios.</p>
+          </div>
+
+          <% if current_group.present? %>
+            <span class="inline-flex items-center rounded-full bg-accent-50 px-3 py-1 text-sm font-medium text-accent-900">Activo: <%= current_group.name %></span>
+          <% end %>
+        </div>
+
+        <div class="mt-6 space-y-3">
+          <% if @groups.any? %>
+            <% @groups.each do |group| %>
+              <div class="flex flex-col gap-4 rounded-2xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="space-y-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-lg font-semibold text-slate-950"><%= group.name %></h3>
+                    <% if group.id == current_group&.id %>
+                      <span class="rounded-full bg-slate-900 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-white">Activo</span>
+                    <% end %>
+                    <% if current_user.admin_of?(group) %>
+                      <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-amber-900">Administrador</span>
+                    <% end %>
+                  </div>
+                  <p class="text-sm text-slate-600">Administra intercambios con <%= pluralize(group.users.count, "miembro", "miembros") %>.</p>
+                </div>
+
+                <% if group.id != current_group&.id %>
+                  <%= button_to "Activar grupo", activate_group_path(group), method: :patch, class: "inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950" %>
+                <% end %>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+              Todavía no perteneces a ningún grupo. Crea uno o únete con un código para empezar a intercambiar con otras personas.
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <% if @managed_group.present? %>
+        <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm shadow-slate-200/50">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-slate-950">Administrar <%= @managed_group.name %></h2>
+              <p class="mt-1 text-sm text-slate-600">Solo el administrador puede cambiar el código, cerrar el registro o retirar miembros.</p>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 px-4 py-3 text-right">
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Código vigente</p>
+              <p class="mt-1 font-mono text-lg font-semibold tracking-[0.2em] text-slate-950"><%= @managed_group.invitation_code %></p>
+            </div>
+          </div>
+
+          <div class="mt-6 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+            <%= form_with model: @managed_group, url: group_path(@managed_group), method: :patch, class: "rounded-2xl border border-slate-200 p-4" do |form| %>
+              <div class="flex items-start gap-3">
+                <%= form.check_box :registration_open, class: "mt-1 h-4 w-4 rounded border-slate-300 text-accent-700 focus:ring-accent-700" %>
+                <div>
+                  <%= form.label :registration_open, "Permitir nuevos registros con el código actual", class: "block text-sm font-medium text-slate-900" %>
+                  <p class="mt-1 text-sm text-slate-600">Si desactivas esta opción, nadie nuevo podrá unirse con este código hasta volver a habilitarlo.</p>
+                </div>
+              </div>
+
+              <%= form.submit "Guardar acceso", class: "mt-4 inline-flex items-center justify-center rounded-2xl bg-accent-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-accent-900" %>
+            <% end %>
+
+            <%= button_to "Generar código nuevo", regenerate_invitation_code_group_path(@managed_group), method: :post, class: "inline-flex items-center justify-center rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950" %>
+          </div>
+
+          <div class="mt-6 space-y-3">
+            <% @managed_memberships.each do |membership| %>
+              <div class="flex flex-col gap-4 rounded-2xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p class="font-medium text-slate-950"><%= membership.user.username %></p>
+                  <p class="text-sm text-slate-600"><%= membership.user.email %></p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <% if membership.user_id == @managed_group.admin_user_id %>
+                    <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-900">Administrador</span>
+                  <% else %>
+                    <%= button_to "Quitar", group_group_membership_path(@managed_group, membership), method: :delete, class: "inline-flex items-center justify-center rounded-2xl border border-rose-200 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50", data: { turbo_confirm: "Se eliminará este miembro del grupo actual." } %>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </section>
+
+    <aside class="space-y-6">
+      <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm shadow-slate-200/50">
+        <div class="space-y-2">
+          <h2 class="text-xl font-semibold text-slate-950">Unirte a un grupo</h2>
+          <p class="text-sm text-slate-600">Pide el código al administrador y entra al grupo desde aquí.</p>
+        </div>
+
+        <%= form_with url: join_groups_path, scope: :group, class: "mt-6 space-y-4" do |form| %>
+          <div class="space-y-2">
+            <%= form.label :invitation_code, "Código de invitación", class: "block text-sm font-medium text-slate-700" %>
+            <%= form.text_field :invitation_code, value: params.dig(:group, :invitation_code), class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 uppercase tracking-wide text-slate-950 focus:border-accent-700 focus:ring-accent-700", placeholder: "OFICINA2026" %>
+          </div>
+
+          <%= form.submit "Entrar al grupo", class: "inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 font-medium text-white transition hover:bg-slate-700" %>
+        <% end %>
+      </div>
+
+      <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm shadow-slate-200/50">
+        <div class="space-y-2">
+          <h2 class="text-xl font-semibold text-slate-950">Crear un grupo nuevo</h2>
+          <p class="text-sm text-slate-600">Crea un espacio separado para amigos, familia, oficina o cualquier otro círculo.</p>
+        </div>
+
+        <% if @new_group.errors.any? %>
+          <div class="mt-6">
+            <%= render "shared/form_errors", record: @new_group %>
+          </div>
+        <% end %>
+
+        <%= form_with model: @new_group, url: groups_path, class: "mt-6 space-y-4" do |form| %>
+          <div class="space-y-2">
+            <%= form.label :name, "Nombre del grupo", class: "block text-sm font-medium text-slate-700" %>
+            <%= form.text_field :name, class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 focus:border-accent-700 focus:ring-accent-700", placeholder: "Amigos del conjunto" %>
+          </div>
+
+          <%= form.submit "Crear grupo", class: "inline-flex w-full items-center justify-center rounded-2xl bg-accent-700 px-4 py-3 font-medium text-white transition hover:bg-accent-900" %>
+        <% end %>
+      </div>
+    </aside>
+  </div>
+</div>

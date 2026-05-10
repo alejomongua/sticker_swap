@@ -14,4 +14,15 @@ RSpec.describe User, type: :model do
 
     expect(described_class.find_by_password_reset_token!(user.password_reset_token)).to eq(user)
   end
+
+  it 'disables offer notifications on create by default' do
+    user = described_class.create!(
+      email: 'new-user@example.com',
+      username: 'nuevo_usuario',
+      password: 'password123',
+      password_confirmation: 'password123'
+    )
+
+    expect(user.receive_offer_notifications).to be(false)
+  end
 end

@@ -63,9 +63,14 @@ class InventoryItemsController < ApplicationController
 
     def dashboard_return_location(extra_params = {})
       referer = request.referer.to_s
+      uri = URI.parse(referer)
       query_params = dashboard_query_params_from(referer).merge(extra_params.to_h.stringify_keys).compact_blank
 
+      return missing_table_dashboard_path if uri.path == missing_table_dashboard_path
+
       dashboard_path(query_params)
+    rescue URI::InvalidURIError
+      dashboard_path(extra_params.to_h.stringify_keys.compact_blank)
     end
 
     def dashboard_query_params_from(referer)
@@ -82,7 +87,7 @@ class InventoryItemsController < ApplicationController
     end
 
     def success_message_for(result, status:)
-      return if status == "missing" && result.unknown_codes.any? && result.saved_count.zero?
+      return if status == "missing" && result.unknown_codes.any?
 
       message = "Inventario actualizado."
       if result.unknown_codes.any? && status != "missing"

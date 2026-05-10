@@ -54,12 +54,16 @@
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div>
             <%= link_to "StickerSwap", authenticated? ? dashboard_path : new_session_path, class: "text-lg font-semibold tracking-tight text-slate-950" %>
+            <% if authenticated? && current_group.present? %>
+              <p class="mt-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">Grupo activo: <%= current_group.name %></p>
+            <% end %>
           </div>
 
           <nav class="flex items-center gap-2 text-sm font-medium text-slate-600">
             <%= link_to "Manual", manual_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
             <% if authenticated? %>
               <%= link_to "Panel", dashboard_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
+              <%= link_to "Grupos", groups_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
               <%= link_to "Progreso", progress_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
               <%= link_to "Mercado", matches_path, class: "rounded-full px-3 py-2 hover:bg-slate-100 hover:text-slate-950" %>
               <% if statistics_available? %>

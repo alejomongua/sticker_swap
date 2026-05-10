@@ -5,7 +5,8 @@ class MatchmakingQuery
     end
   end
 
-  def initialize(user)
+  def initialize(user, group:)
+    @group = group
     @user = user
   end
 
@@ -16,6 +17,7 @@ class MatchmakingQuery
   end
 
   private
+    attr_reader :group
     attr_reader :user
 
     def summary_for(other_user)
@@ -44,6 +46,10 @@ class MatchmakingQuery
     end
 
     def other_users
-      @other_users ||= User.where.not(id: user.id).includes(inventory_items: :sticker)
+      @other_users ||= begin
+        return User.none if group.blank?
+
+        group.users.where.not(id: user.id).includes(inventory_items: :sticker)
+      end
     end
 end

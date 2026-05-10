@@ -2,6 +2,18 @@ Rails.application.routes.draw do
   resource :registration, only: %i[ new create ], controller: :registrations, path: :registro
   resource :session, only: %i[ new create destroy ], path: :sesion
   resources :passwords, only: %i[ new create edit update ], param: :token, path: :acceso
+  resources :groups, only: %i[ index create update ], path: :grupos do
+    collection do
+      post :join, path: :unirse
+    end
+
+    member do
+      patch :activate, path: :activar
+      post :regenerate_invitation_code, path: :regenerar_codigo
+    end
+
+    resources :group_memberships, only: :destroy, path: :miembros
+  end
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.

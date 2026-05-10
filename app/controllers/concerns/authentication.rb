@@ -3,7 +3,7 @@ module Authentication
 
   included do
     before_action :require_authentication
-    helper_method :authenticated?, :current_user
+    helper_method :authenticated?, :current_group, :current_user
   end
 
   class_methods do
@@ -19,6 +19,17 @@ module Authentication
 
     def current_user
       Current.user
+    end
+
+    def current_group
+      Current.group ||= begin
+        user = current_user
+        if user.present?
+          user.active_group || user.groups.order("group_memberships.created_at ASC", "group_memberships.id ASC").first.tap do |group|
+            user.update_column(:active_group_id, group.id) if group.present? && user.active_group_id != group.id
+          end
+        end
+      end
     end
 
     def require_authentication
@@ -45,6 +56,7 @@ module Authentication
     def start_new_session_for(user)
       user.sessions.create!(user_agent: request.user_agent, ip_address: request.remote_ip).tap do |session_record|
         Current.session = session_record
+        Current.group = user.active_group
         cookies.signed.permanent[:session_id] = {
           value: session_record.id,
           httponly: true,
@@ -56,6 +68,7 @@ module Authentication
 
     def terminate_session
       Current.session&.destroy
+      Current.group = nil
       Current.session = nil
       cookies.delete(:session_id)
     end

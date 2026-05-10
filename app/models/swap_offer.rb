@@ -1,4 +1,5 @@
 class SwapOffer < ApplicationRecord
+  belongs_to :group
   belongs_to :offered_sticker, class_name: "Sticker", inverse_of: :offered_swap_offers
   belongs_to :receiver, class_name: "User", inverse_of: :received_swap_offers
   belongs_to :requested_sticker, class_name: "Sticker", inverse_of: :requested_swap_offers
@@ -7,6 +8,7 @@ class SwapOffer < ApplicationRecord
   enum :status, { pending: 0, accepted: 1, declined: 2 }
 
   validates :status, presence: true
+  validate :participants_must_belong_to_group
   validate :participants_must_be_different
   validate :stickers_must_be_different
   validate :inventory_must_match, on: :create
@@ -56,9 +58,10 @@ class SwapOffer < ApplicationRecord
     end
 
     def no_duplicate_pending_offer
-      return if sender_id.blank? || receiver_id.blank? || offered_sticker_id.blank? || requested_sticker_id.blank?
+      return if group_id.blank? || sender_id.blank? || receiver_id.blank? || offered_sticker_id.blank? || requested_sticker_id.blank?
 
       duplicate_offer = self.class.pending.where(
+        group_id: group_id,
         sender_id: sender_id,
         receiver_id: receiver_id,
         offered_sticker_id: offered_sticker_id,
@@ -70,6 +73,15 @@ class SwapOffer < ApplicationRecord
 
     def notify_receiver
       SwapOffersMailer.created(self).deliver_later
+    end
+
+    def participants_must_belong_to_group
+      return if group.blank? || sender_id.blank? || receiver_id.blank?
+
+      member_ids = group.group_memberships.where(user_id: [ sender_id, receiver_id ]).distinct.count
+      return if member_ids == 2
+
+      errors.add(:base, "La propuesta solo puede involucrar miembros del grupo activo.")
     end
 
     def participants_must_be_different

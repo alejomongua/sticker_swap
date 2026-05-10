@@ -1,6 +1,59 @@
 require 'rails_helper'
 
 RSpec.describe SwapOffer, type: :model do
+  describe 'group boundaries' do
+    it 'allows a trade between users who share the offer group' do
+      sender = create(:user, create_default_group: false)
+      receiver = create(:user, create_default_group: false)
+      group = create(:group, admin_user: sender)
+      offered_sticker = create(:sticker, prefix: 'ARG', number: 1)
+      requested_sticker = create(:sticker, prefix: 'BRA', number: 2)
+
+      group.add_member!(receiver)
+      create(:inventory_item, :duplicate, user: sender, sticker: offered_sticker)
+      create(:inventory_item, user: sender, sticker: requested_sticker, status: :missing)
+      create(:inventory_item, :duplicate, user: receiver, sticker: requested_sticker)
+      create(:inventory_item, user: receiver, sticker: offered_sticker, status: :missing)
+
+      offer = described_class.new(
+        group: group,
+        sender: sender,
+        receiver: receiver,
+        offered_sticker: offered_sticker,
+        requested_sticker: requested_sticker,
+        status: :pending
+      )
+
+      expect(offer).to be_valid
+    end
+
+    it 'rejects a trade when the receiver is outside the offer group' do
+      sender = create(:user, create_default_group: false)
+      receiver = create(:user, create_default_group: false)
+      group = create(:group, admin_user: sender)
+      create(:group, admin_user: receiver)
+      offered_sticker = create(:sticker, prefix: 'ARG', number: 1)
+      requested_sticker = create(:sticker, prefix: 'BRA', number: 2)
+
+      create(:inventory_item, :duplicate, user: sender, sticker: offered_sticker)
+      create(:inventory_item, user: sender, sticker: requested_sticker, status: :missing)
+      create(:inventory_item, :duplicate, user: receiver, sticker: requested_sticker)
+      create(:inventory_item, user: receiver, sticker: offered_sticker, status: :missing)
+
+      offer = described_class.new(
+        group: group,
+        sender: sender,
+        receiver: receiver,
+        offered_sticker: offered_sticker,
+        requested_sticker: requested_sticker,
+        status: :pending
+      )
+
+      expect(offer).not_to be_valid
+      expect(offer.errors[:base]).to include('La propuesta solo puede involucrar miembros del grupo activo.')
+    end
+  end
+
   describe '#accept!' do
     it 'accepts the offer and removes the exchanged inventory records' do
       offer = create(:swap_offer)

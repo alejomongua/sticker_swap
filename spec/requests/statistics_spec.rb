@@ -14,12 +14,14 @@ RSpec.describe "Statistics", type: :request do
     end
 
     it "renders the easiest and hardest stickers when enough users have both lists" do
-      stats_user = create(:user)
+      stats_user = create(:user, create_default_group: false)
+      group = create(:group, admin_user: stats_user)
       easiest = create(:sticker, prefix: "ARG", number: 1, name: "Argentina")
       hardest = create(:sticker, prefix: "BRA", number: 2, name: "Brasil")
 
       5.times do
-        user = create(:user)
+        user = create(:user, create_default_group: false)
+        group.add_member!(user)
         create(:inventory_item, :duplicate, user: user, sticker: easiest, quantity: 2)
         create(:inventory_item, user: user, sticker: hardest)
       end

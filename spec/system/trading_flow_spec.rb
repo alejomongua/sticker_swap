@@ -4,8 +4,11 @@ RSpec.describe 'Trading flow', type: :system do
   it 'lets a user manage inventory and send a swap offer' do
     offered_sticker = create(:sticker, prefix: 'ARG', number: 1, name: 'Argentina', group_name: 'Grupo J')
     requested_sticker = create(:sticker, prefix: 'BRA', number: 2, name: 'Brasil', group_name: 'Grupo C')
-    current_user = create(:user, email: 'jugador@example.com', username: 'jugador')
-    partner = create(:user, email: 'contacto@example.com', username: 'contacto')
+    current_user = create(:user, email: 'jugador@example.com', username: 'jugador', create_default_group: false)
+    partner = create(:user, email: 'contacto@example.com', username: 'contacto', create_default_group: false)
+    trading_group = create(:group, admin_user: current_user)
+
+    trading_group.add_member!(partner)
 
     create(:inventory_item, :duplicate, user: partner, sticker: requested_sticker)
     create(:inventory_item, user: partner, sticker: offered_sticker, status: :missing)
