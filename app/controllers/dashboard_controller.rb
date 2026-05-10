@@ -50,6 +50,7 @@ class DashboardController < ApplicationController
                                     .pluck("stickers.prefix")
                                     .compact_blank
     @progress_summary = progress_query.summary
+    append_alert(inventory_conflicts_alert, now: true)
   end
 
   def missing_table

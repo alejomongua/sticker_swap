@@ -11,7 +11,8 @@ class InventoryItemsController < ApplicationController
     if result.success?
       flash[:notice] = success_message_for(result, status: status)
       append_alert(unknown_codes_message_for(result, status: status))
-      append_alert(incoherence_alert_for(result.conflicts)) if result.conflicts.any?
+      persist_inventory_conflicts(result.conflicts)
+      append_alert(inventory_conflicts_alert) if result.conflicts.any?
 
       redirect_to dashboard_return_location(duplicate_mode: params[:duplicate_mode]), status: :see_other
     else
@@ -100,23 +101,5 @@ class InventoryItemsController < ApplicationController
       return if status != "missing" || result.unknown_codes.empty?
 
       "No se encontraron estas fichas faltantes: #{result.unknown_codes.join(', ')}."
-    end
-
-    def append_alert(message)
-      return if message.blank?
-
-      flash[:alert] = [ flash[:alert], message ].compact.join(" ")
-    end
-
-    def incoherence_alert_for(conflicts)
-      changes = conflicts.map do |conflict|
-        "#{conflict.code}: de #{human_inventory_status(conflict.previous_status)} a #{human_inventory_status(conflict.new_status)}"
-      end
-
-      "Posible incoherencia en tu inventario. Revisa #{changes.join(', ')}."
-    end
-
-    def human_inventory_status(status)
-      status == "duplicate" ? "repetida" : "faltante"
     end
 end

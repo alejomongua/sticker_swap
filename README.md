@@ -77,6 +77,22 @@ bundle exec rails server
 
 La app queda disponible en la URL definida por `APP_PROTOCOL`, `APP_DOMAIN` y `APP_PORT`.
 
+## Exportar inventario en texto
+
+Listar repetidas de un usuario por correo:
+
+```bash
+bundle exec rails 'inventory:list_duplicates[user@example.com]'
+```
+
+Listar faltantes de un usuario por correo:
+
+```bash
+bundle exec rails 'inventory:list_missing[user@example.com]'
+```
+
+La salida usa el orden del catálogo y devuelve los códigos separados por coma. En repetidas se imprime una entrada por cada copia cargada.
+
 ## Testing y calidad
 
 Preparar base de test:

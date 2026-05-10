@@ -12,9 +12,20 @@
     <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
       <h2 class="text-xl font-semibold text-slate-950">Crear cuenta</h2>
       <div class="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-        <p>Para registrarte necesitas un código de invitación válido. Sin ese código no podrás crear el usuario.</p>
-        <p>Entra a <%= link_to "Crear cuenta", new_registration_path, class: "font-medium text-accent-700 hover:text-accent-900" %> y completa usuario, correo, contraseña y el código de invitación.</p>
-        <p>Si vas a recibir propuestas por correo, activa la casilla de notificaciones durante el registro o luego desde tu perfil.</p>
+        <p>Al registrarte puedes unirte a un grupo existente con un código de invitación o crear un grupo nuevo para tus propios amigos.</p>
+        <p>Entra a <%= link_to "Crear cuenta", new_registration_path, class: "font-medium text-accent-700 hover:text-accent-900" %> y completa usuario, correo y contraseña. Luego elige si vas a usar un código de invitación o si vas a crear un grupo desde cero.</p>
+        <p>Si creas un grupo nuevo quedas como administrador. Si entras con código, quedarás dentro del grupo al que pertenece ese código.</p>
+        <p>Si vas a recibir propuestas por correo, activa las notificaciones luego desde tu perfil.</p>
+      </div>
+    </section>
+
+    <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
+      <h2 class="text-xl font-semibold text-slate-950">Grupos</h2>
+      <div class="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+        <p>Cada usuario puede pertenecer a varios grupos, pero siempre trabaja sobre un grupo activo.</p>
+        <p>El grupo activo define con quién ves coincidencias en Mercado, qué intercambios aparecen y sobre qué grupo se calculan las estadísticas.</p>
+        <p>Desde la sección Grupos puedes cambiar de grupo activo, unirte a otro con código o crear uno adicional para otro círculo de amigos.</p>
+        <p>Si eres administrador también puedes regenerar el código de invitación, cerrar el registro y sacar miembros del grupo.</p>
       </div>
     </section>
 
@@ -33,7 +44,7 @@
       <div class="mt-4 space-y-3 text-sm leading-6 text-slate-600">
         <p>En el menú encontrarás la vista de Progreso. Allí verás el porcentaje total del álbum estimado con base en tus faltantes y el detalle por prefijo.</p>
         <p>El panel también muestra un resumen rápido del avance y un enlace directo al detalle.</p>
-        <p>La vista de Estadísticas solo aparece cuando al menos 5 usuarios han cargado repetidas y faltantes.</p>
+        <p>La vista de Estadísticas solo aparece cuando al menos 5 usuarios del grupo activo han cargado repetidas y faltantes.</p>
       </div>
     </section>
 
@@ -48,8 +59,9 @@
     <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
       <h2 class="text-xl font-semibold text-slate-950">Cómo funciona el intercambio</h2>
       <div class="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-        <p>En Mercado verás personas con las que tienes coincidencias: qué puedes ofrecer y qué podrías pedir.</p>
+        <p>En Mercado verás únicamente personas que estén en tu grupo activo y con las que tienes coincidencias: qué puedes ofrecer y qué podrías pedir.</p>
         <p>Puedes enviar una propuesta seleccionando una repetida tuya y una faltante tuya que la otra persona sí tenga disponible.</p>
+        <p>No es posible proponer trueques con personas que no pertenezcan a ese grupo activo.</p>
         <p>Cuando la otra persona acepta, la plataforma descuenta automáticamente una copia de cada repetida usada y retira las faltantes resueltas.</p>
       </div>
     </section>

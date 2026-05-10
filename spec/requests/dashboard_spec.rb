@@ -136,6 +136,28 @@ RSpec.describe "Dashboard", type: :request do
       expect(response.body).to include("#{expected_percentage}%")
       expect(response.body).to include("#{expected_owned_count} de #{catalog_count} fichas estimadas")
     end
+
+    it "shows incoherence alerts on every dashboard load after they are detected" do
+      user = create(:user)
+      sticker = create(:sticker, prefix: "ZZPI", number: 30_011, name: "Argentina")
+      create(:inventory_item, user: user, sticker: sticker)
+
+      sign_in_as(user)
+
+      post inventory_items_path, params: { inventory_item: { status: "duplicate", code: sticker.code, quantity: 2 } }
+
+      get dashboard_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Posible incoherencia en tu inventario")
+      expect(response.body).to include("#{sticker.code}: de faltante a repetida")
+
+      get dashboard_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Posible incoherencia en tu inventario")
+      expect(response.body).to include("#{sticker.code}: de faltante a repetida")
+    end
   end
 
   describe "GET /panel/faltantes-tabla" do

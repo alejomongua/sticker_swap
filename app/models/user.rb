@@ -41,6 +41,14 @@ class User < ApplicationRecord
     inventory_items.missing.includes(:sticker).ordered
   end
 
+  def duplicate_codes_text
+    inventory_codes_text(duplicate_items, repeat_by_quantity: true)
+  end
+
+  def missing_codes_text
+    inventory_codes_text(missing_items)
+  end
+
   def password_reset_token
     signed_id(expires_in: 30.minutes, purpose: :password_reset)
   end
@@ -68,6 +76,13 @@ class User < ApplicationRecord
   end
 
   private
+    def inventory_codes_text(items, repeat_by_quantity: false)
+      items.flat_map do |inventory_item|
+        occurrences = repeat_by_quantity ? inventory_item.quantity : 1
+        Array.new(occurrences, inventory_item.code)
+      end.join(', ')
+    end
+
     def active_group_must_belong_to_user
       return if active_group_id.blank? || group_memberships.exists?(group_id: active_group_id)
 

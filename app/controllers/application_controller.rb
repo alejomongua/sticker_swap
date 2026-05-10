@@ -8,6 +8,46 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   private
+    def append_alert(message, now: false)
+      return if message.blank?
+
+      existing_message = flash[:alert].presence
+      merged_message = [ existing_message, message ].compact.reject { |entry| existing_message.present? && existing_message.include?(entry) && entry == message }.join(" ")
+      merged_message = existing_message if merged_message.blank?
+      merged_message ||= message
+
+      if now
+        flash.now[:alert] = merged_message
+      else
+        flash[:alert] = merged_message
+      end
+    end
+
+    def persist_inventory_conflicts(conflicts)
+      return if conflicts.blank? || current_user.blank?
+
+      session[:inventory_conflicts_by_user_id] = inventory_conflicts_by_user_id.merge(
+        current_user.id.to_s => stored_inventory_conflicts.merge(
+          conflicts.index_with do |conflict|
+            {
+              "previous_status" => conflict.previous_status,
+              "new_status" => conflict.new_status
+            }
+          end.transform_keys { |conflict| conflict.code }
+        )
+      )
+    end
+
+    def inventory_conflicts_alert
+      return if stored_inventory_conflicts.empty?
+
+      changes = stored_inventory_conflicts.sort.map do |code, conflict|
+        "#{code}: de #{human_inventory_status(conflict["previous_status"])} a #{human_inventory_status(conflict["new_status"])}"
+      end
+
+      "Posible incoherencia en tu inventario. Revisa #{changes.join(', ')}."
+    end
+
     def require_current_group!
       return if current_group.present?
 
@@ -24,5 +64,21 @@ class ApplicationController < ActionController::Base
 
     def current_page_title
       "StickerSwap"
+    end
+
+    def inventory_conflicts_by_user_id
+      value = session[:inventory_conflicts_by_user_id]
+      value.is_a?(Hash) ? value : {}
+    end
+
+    def stored_inventory_conflicts
+      return {} if current_user.blank?
+
+      conflicts = inventory_conflicts_by_user_id[current_user.id.to_s]
+      conflicts.is_a?(Hash) ? conflicts : {}
+    end
+
+    def human_inventory_status(status)
+      status == "duplicate" ? "repetida" : "faltante"
     end
 end

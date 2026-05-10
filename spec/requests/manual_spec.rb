@@ -8,6 +8,8 @@ RSpec.describe 'Manual', type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include('Cómo usar StickerSwap')
       expect(response.body).to include('código de invitación')
+      expect(response.body).to include('grupo activo')
+      expect(response.body).to include('Grupos')
       expect(response.body).to include('modo')
       expect(response.body).to include('Progreso')
       expect(response.body).to include('Estadísticas')
