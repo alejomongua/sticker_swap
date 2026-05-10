@@ -29,6 +29,6 @@ class ProfilesController < ApplicationController
 
   private
     def profile_params
-      params.require(:user).permit(:email, :username, :receive_offer_notifications, :password, :password_confirmation)
+      params.require(:user).permit(:email, :username, :password, :password_confirmation)
     end
 end

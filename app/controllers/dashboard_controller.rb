@@ -2,6 +2,8 @@ class DashboardController < ApplicationController
   DUPLICATES_PER_PAGE = 10
   MISSING_ITEMS_PER_PAGE = 10
 
+  before_action :prepare_missing_table_data, only: :missing_table
+
   def show
     progress_query = InventoryProgressQuery.new(current_user)
 
@@ -50,6 +52,11 @@ class DashboardController < ApplicationController
     @progress_summary = progress_query.summary
   end
 
+  def missing_table
+    @duplicate_mode = duplicate_mode_param
+    @missing_total_count = current_user.inventory_items.missing.count
+  end
+
   private
     def duplicate_items_scope
       filtered_items_scope(current_user.duplicate_items, prefix: @duplicate_prefix, code: params[:duplicate_code])
@@ -95,5 +102,10 @@ class DashboardController < ApplicationController
       return raw_code.upcase if number.nil?
 
       prefix.present? ? "#{prefix}#{number}" : format("%02d", number)
+    end
+
+    def prepare_missing_table_data
+      @missing_items_by_sticker_id = current_user.missing_items.includes(:sticker).index_by(&:sticker_id)
+      @stickers_by_prefix = Sticker.catalog_order.group_by(&:prefix)
     end
 end

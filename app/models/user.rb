@@ -16,6 +16,8 @@ class User < ApplicationRecord
   normalizes :email, with: ->(value) { value.to_s.strip.downcase }
   normalizes :username, with: ->(value) { value.to_s.strip }
 
+  before_validation :disable_offer_notifications_on_create, on: :create
+
   validates :email,
             format: { with: URI::MailTo::EMAIL_REGEXP, message: "no es válido" },
             presence: true,
@@ -38,4 +40,9 @@ class User < ApplicationRecord
   def self.find_by_password_reset_token!(token)
     find_signed!(token, purpose: :password_reset)
   end
+
+  private
+    def disable_offer_notifications_on_create
+      self.receive_offer_notifications = false
+    end
 end

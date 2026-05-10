@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   get :manual, to: "manual#show", as: :manual
 
   get :panel, to: "dashboard#show", as: :dashboard
+  get "panel/faltantes-tabla", to: "dashboard#missing_table", as: :missing_table_dashboard
   get :progreso, to: "progress#show", as: :progress
   get :estadisticas, to: "statistics#show", as: :statistics
   resource :profile, only: %i[ edit update ], path: :perfil

@@ -11,7 +11,10 @@
     </div>
   </div>
 
-  <%= form_with url: dashboard_path, method: :get, class: "mt-5 grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-end", data: { controller: "inventory-filter" } do %>
+  <%= form_with url: dashboard_path,
+                method: :get,
+                class: "mt-5 grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-end",
+                data: { controller: "inventory-filter", turbo_frame: "dashboard_panel" } do %>
     <%= hidden_field_tag :duplicate_mode, @duplicate_mode %>
     <%= hidden_field_tag :missing_prefix, @missing_prefix %>
     <%= hidden_field_tag :missing_code, @missing_code %>
@@ -40,6 +43,7 @@
                                missing_prefix: @missing_prefix,
                                missing_code: @missing_code,
                                missing_page: @missing_page),
+                data: { turbo_frame: "dashboard_panel" },
                 class: "inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950" %>
   <% end %>
 
@@ -57,7 +61,11 @@
               <p class="mt-1 text-sm text-slate-600"><%= item.sticker.name %></p>
             </div>
 
-            <%= form_with model: item, url: inventory_item_path(item), method: :patch, class: "grid gap-3 sm:grid-cols-[9rem_auto] sm:items-end" do |form| %>
+            <%= form_with model: item,
+                          url: inventory_item_path(item),
+                          method: :patch,
+                          class: "grid gap-3 sm:grid-cols-[9rem_auto] sm:items-end",
+                          data: { turbo_frame: "dashboard_panel" } do |form| %>
               <div class="space-y-2">
                 <%= form.label :quantity, "Cantidad para #{item.code}", for: quantity_field_id, class: "block text-sm font-medium text-slate-700" %>
                 <%= form.number_field :quantity, id: quantity_field_id, value: item.quantity, min: 0, step: 1, class: "block w-full rounded-2xl border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
@@ -75,6 +83,7 @@
         <%= link_to_if @duplicate_page > 1,
                        "Anterior",
                        dashboard_path(@dashboard_filters.merge(duplicates_page: @duplicate_page - 1, missing_page: @missing_page)),
+                       data: { turbo_frame: "dashboard_panel" },
                        class: "rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" do %>
           <span class="rounded-full border border-slate-100 px-4 py-2 text-slate-300">Anterior</span>
         <% end %>
@@ -84,6 +93,7 @@
         <%= link_to_if @duplicate_page < @duplicate_pages,
                        "Siguiente",
                        dashboard_path(@dashboard_filters.merge(duplicates_page: @duplicate_page + 1, missing_page: @missing_page)),
+                       data: { turbo_frame: "dashboard_panel" },
                        class: "rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" do %>
           <span class="rounded-full border border-slate-100 px-4 py-2 text-slate-300">Siguiente</span>
         <% end %>

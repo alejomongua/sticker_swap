@@ -6,7 +6,7 @@
     </div>
 
     <div class="flex flex-wrap gap-3 text-sm font-medium">
-      <div class="rounded-full bg-amber-100 px-4 py-2 text-amber-900">Faltantes: <%= @missing_items.size %></div>
+      <div class="rounded-full bg-amber-100 px-4 py-2 text-amber-900">Faltantes: <%= @missing_total_count %></div>
       <div class="rounded-full bg-emerald-100 px-4 py-2 text-emerald-900">Repetidas: <%= @duplicate_copies_count %></div>
       <%= link_to "Ver progreso", progress_path, class: "rounded-full border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950" %>
       <% if statistics_available? %>

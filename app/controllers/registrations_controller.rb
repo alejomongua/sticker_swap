@@ -3,12 +3,13 @@ class RegistrationsController < ApplicationController
   rate_limit to: 5, within: 10.minutes, only: :create, with: -> { redirect_to new_registration_path, alert: "Intenta de nuevo en unos minutos." }
 
   def new
-    @user = User.new(receive_offer_notifications: true)
+    @user = User.new(receive_offer_notifications: false)
   end
 
   def create
     submission = registration_submission_params
-    @user = User.new(submission.except(:invitation_code))
+    @user = User.new(submission.except(:invitation_code, :receive_offer_notifications)
+                   .merge(receive_offer_notifications: false))
 
     unless StickerSwap::RuntimeConfig.valid_registration_code?(submission[:invitation_code])
       @user.errors.add(:base, "El código de invitación no es válido o ya fue usado.")
@@ -31,7 +32,6 @@ class RegistrationsController < ApplicationController
         :username,
         :password,
         :password_confirmation,
-        :receive_offer_notifications,
         :invitation_code
       )
     end

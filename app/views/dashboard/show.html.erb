@@ -13,7 +13,13 @@
           <p class="text-sm text-slate-600">Pega códigos separados por coma, espacio o salto de línea. Ejemplo: <span class="font-medium text-slate-800">ARG1, ARG2, FWC3</span></p>
         </div>
 
-        <%= form_with model: InventoryItem.new, url: inventory_items_path, class: "mt-5 space-y-4" do |form| %>
+        <div class="mt-4">
+          <%= link_to "Abrir tabla interactiva",
+                      missing_table_dashboard_path,
+                      class: "inline-flex items-center justify-center rounded-2xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 transition hover:border-amber-400 hover:bg-amber-100" %>
+        </div>
+
+        <%= form_with model: InventoryItem.new, url: inventory_items_path, class: "mt-5 space-y-4", data: { turbo_frame: "dashboard_panel" } do |form| %>
           <%= form.hidden_field :status, value: :missing %>
           <div class="space-y-2">
             <%= form.label :codes, "Figuras faltantes", for: "missing_inventory_codes", class: "block text-sm font-medium text-slate-700" %>
@@ -30,7 +36,10 @@
           <p class="text-sm text-slate-600">Usa el modo individual para ajustar cantidad o el modo masivo para pegar varias fichas y sumar una copia por cada aparición.</p>
         </div>
 
-        <%= form_with model: InventoryItem.new, url: inventory_items_path, class: "mt-5 space-y-4", data: { controller: "duplicate-form" } do |form| %>
+        <%= form_with model: InventoryItem.new,
+                url: inventory_items_path,
+                class: "mt-5 space-y-4",
+                data: { controller: "duplicate-form", turbo_frame: "dashboard_panel" } do |form| %>
           <%= form.hidden_field :status, value: :duplicate %>
 
           <div class="space-y-2">

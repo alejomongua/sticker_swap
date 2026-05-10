@@ -1,15 +1,17 @@
 class InventoryItemsController < ApplicationController
   def create
+    status = inventory_item_params[:status]
     result = InventoryBulkUpsert.new(
       user: current_user,
-      status: inventory_item_params[:status],
+      status: status,
       codes: submitted_codes,
       quantity: inventory_item_params[:quantity]
     ).call
 
     if result.success?
-      flash[:notice] = success_message_for(result)
-      flash[:alert] = incoherence_alert_for(result.conflicts) if result.conflicts.any?
+      flash[:notice] = success_message_for(result, status: status)
+      append_alert(unknown_codes_message_for(result, status: status))
+      append_alert(incoherence_alert_for(result.conflicts)) if result.conflicts.any?
 
       redirect_to dashboard_return_location(duplicate_mode: params[:duplicate_mode]), status: :see_other
     else
@@ -70,7 +72,7 @@ class InventoryItemsController < ApplicationController
       return {} if referer.blank?
 
       uri = URI.parse(referer)
-      return {} unless [ root_path, dashboard_path ].include?(uri.path)
+      return {} unless [ root_path, dashboard_path, missing_table_dashboard_path ].include?(uri.path)
 
       Rack::Utils.parse_nested_query(uri.query)
                  .slice("duplicate_prefix", "duplicate_code", "duplicate_mode", "duplicates_page",
@@ -79,10 +81,26 @@ class InventoryItemsController < ApplicationController
       {}
     end
 
-    def success_message_for(result)
+    def success_message_for(result, status:)
+      return if status == "missing" && result.unknown_codes.any? && result.saved_count.zero?
+
       message = "Inventario actualizado."
-      message += " No se encontraron: #{result.unknown_codes.join(', ')}." if result.unknown_codes.any?
+      if result.unknown_codes.any? && status != "missing"
+        message += " No se encontraron: #{result.unknown_codes.join(', ')}."
+      end
       message
+    end
+
+    def unknown_codes_message_for(result, status:)
+      return if status != "missing" || result.unknown_codes.empty?
+
+      "No se encontraron estas fichas faltantes: #{result.unknown_codes.join(', ')}."
+    end
+
+    def append_alert(message)
+      return if message.blank?
+
+      flash[:alert] = [ flash[:alert], message ].compact.join(" ")
     end
 
     def incoherence_alert_for(conflicts)

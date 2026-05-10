@@ -7,11 +7,13 @@
 
     <div class="flex flex-wrap gap-3 text-sm font-medium">
       <span class="rounded-full bg-amber-100 px-4 py-2 text-amber-900"><%= @missing_total_count %> faltantes</span>
-      <span class="rounded-full bg-slate-100 px-4 py-2 text-slate-700"><%= @missing_items_count %> fichas</span>
     </div>
   </div>
 
-  <%= form_with url: dashboard_path, method: :get, class: "mt-5 grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-end", data: { controller: "inventory-filter" } do %>
+  <%= form_with url: dashboard_path,
+                method: :get,
+                class: "mt-5 grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-end",
+                data: { controller: "inventory-filter", turbo_frame: "dashboard_panel" } do %>
     <%= hidden_field_tag :duplicate_mode, @duplicate_mode %>
     <%= hidden_field_tag :duplicate_prefix, @duplicate_prefix %>
     <%= hidden_field_tag :duplicate_code, @duplicate_code %>
@@ -40,6 +42,7 @@
                                duplicate_prefix: @duplicate_prefix,
                                duplicate_code: @duplicate_code,
                                duplicates_page: @duplicate_page),
+                data: { turbo_frame: "dashboard_panel" },
                 class: "inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950" %>
   <% end %>
 
@@ -51,7 +54,11 @@
             <p class="font-medium text-slate-900"><%= item.code %></p>
             <p class="text-sm text-slate-600"><%= item.sticker.name %></p>
           </div>
-          <%= button_to "Marcar conseguida", inventory_item_path(item), method: :delete, class: "rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" %>
+          <%= button_to "Marcar conseguida",
+                        inventory_item_path(item),
+                        method: :delete,
+                        form: { data: { turbo_frame: "dashboard_panel" } },
+                        class: "rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" %>
         </li>
       <% end %>
     </ul>
@@ -61,6 +68,7 @@
         <%= link_to_if @missing_page > 1,
                        "Anterior",
                        dashboard_path(@dashboard_filters.merge(duplicates_page: @duplicate_page, missing_page: @missing_page - 1)),
+                       data: { turbo_frame: "dashboard_panel" },
                        class: "rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" do %>
           <span class="rounded-full border border-slate-100 px-4 py-2 text-slate-300">Anterior</span>
         <% end %>
@@ -70,6 +78,7 @@
         <%= link_to_if @missing_page < @missing_pages,
                        "Siguiente",
                        dashboard_path(@dashboard_filters.merge(duplicates_page: @duplicate_page, missing_page: @missing_page + 1)),
+                       data: { turbo_frame: "dashboard_panel" },
                        class: "rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" do %>
           <span class="rounded-full border border-slate-100 px-4 py-2 text-slate-300">Siguiente</span>
         <% end %>
