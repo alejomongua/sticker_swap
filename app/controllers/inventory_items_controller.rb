@@ -119,7 +119,9 @@ class InventoryItemsController < ApplicationController
     end
 
     def render_inventory_turbo_stream(status: :ok)
-      state_params = dashboard_query_params_from(request.referer).merge("duplicate_mode" => params[:duplicate_mode]).compact_blank
+      state_params = dashboard_query_params_from(request.referer)
+                       .merge(submitted_dashboard_state_params)
+                       .compact_blank
       set_dashboard_state_params(state_params)
 
       if turbo_frame_request_id == "missing_table"
@@ -134,7 +136,10 @@ class InventoryItemsController < ApplicationController
     def dashboard_return_location(extra_params = {})
       referer = request.referer.to_s
       uri = URI.parse(referer)
-      query_params = dashboard_query_params_from(referer).merge(extra_params.to_h.stringify_keys).compact_blank
+      query_params = dashboard_query_params_from(referer)
+                       .merge(submitted_dashboard_state_params)
+                       .merge(extra_params.to_h.stringify_keys)
+                       .compact_blank
 
       return missing_table_dashboard_path if uri.path == missing_table_dashboard_path
 
@@ -154,6 +159,18 @@ class InventoryItemsController < ApplicationController
                         "missing_prefix", "missing_code", "missing_page")
     rescue URI::InvalidURIError
       {}
+    end
+
+    def submitted_dashboard_state_params
+      params.to_unsafe_h.slice(
+        "duplicate_prefix",
+        "duplicate_code",
+        "duplicate_mode",
+        "duplicates_page",
+        "missing_prefix",
+        "missing_code",
+        "missing_page"
+      )
     end
 
     def success_message_for(result, status:)

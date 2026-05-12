@@ -57,7 +57,16 @@
           <%= button_to "Marcar conseguida",
                         inventory_item_path(item),
                         method: :delete,
-                        form: { data: { turbo_frame: "dashboard_panel" } },
+                        form: { data: { turbo_frame: "dashboard_panel", turbo_stream: true } },
+                        params: {
+                          duplicate_mode: @duplicate_mode,
+                          duplicate_prefix: @duplicate_prefix,
+                          duplicate_code: @duplicate_code,
+                          duplicates_page: @duplicate_page,
+                          missing_prefix: @missing_prefix,
+                          missing_code: @missing_code,
+                          missing_page: @missing_page
+                        },
                         class: "rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" %>
         </li>
       <% end %>

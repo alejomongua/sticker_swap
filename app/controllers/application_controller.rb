@@ -85,14 +85,14 @@ class ApplicationController < ActionController::Base
     def render_dashboard_turbo_stream(status: :ok)
       render turbo_stream: [
         turbo_stream.replace("flash", partial: "shared/flash_frame"),
-        turbo_stream.replace("dashboard_panel", partial: "dashboard/panel")
+        turbo_stream.replace("dashboard_panel", partial: "dashboard/panel", method: :morph)
       ], status: status
     end
 
     def render_missing_table_turbo_stream(status: :ok)
       render turbo_stream: [
         turbo_stream.replace("flash", partial: "shared/flash_frame"),
-        turbo_stream.replace("missing_table", partial: "dashboard/missing_table_frame")
+        turbo_stream.replace("missing_table", partial: "dashboard/missing_table_frame", method: :morph)
       ], status: status
     end
 

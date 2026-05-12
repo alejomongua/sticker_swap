@@ -18,8 +18,15 @@
                       class: "inline-flex items-center justify-center rounded-2xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 transition hover:border-amber-400 hover:bg-amber-100" %>
         </div>
 
-        <%= form_with model: InventoryItem.new, url: inventory_items_path, class: "mt-5 space-y-4", data: { turbo_frame: "dashboard_panel" } do |form| %>
+        <%= form_with model: InventoryItem.new, url: inventory_items_path, class: "mt-5 space-y-4", data: { turbo_frame: "dashboard_panel", turbo_stream: true } do |form| %>
           <%= form.hidden_field :status, value: :missing %>
+          <%= hidden_field_tag :duplicate_mode, @duplicate_mode %>
+          <%= hidden_field_tag :duplicate_prefix, @duplicate_prefix %>
+          <%= hidden_field_tag :duplicate_code, @duplicate_code %>
+          <%= hidden_field_tag :duplicates_page, @duplicate_page %>
+          <%= hidden_field_tag :missing_prefix, @missing_prefix %>
+          <%= hidden_field_tag :missing_code, @missing_code %>
+          <%= hidden_field_tag :missing_page, @missing_page %>
           <div class="space-y-2">
             <%= form.label :codes, "Figuras faltantes", for: "missing_inventory_codes", class: "block text-sm font-medium text-slate-700" %>
             <%= form.text_area :codes, id: "missing_inventory_codes", rows: 6, class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>
@@ -38,8 +45,14 @@
         <%= form_with model: InventoryItem.new,
                 url: inventory_items_path,
                 class: "mt-5 space-y-4",
-                data: { controller: "duplicate-form", turbo_frame: "dashboard_panel" } do |form| %>
+                data: { controller: "duplicate-form", turbo_frame: "dashboard_panel", turbo_stream: true } do |form| %>
           <%= form.hidden_field :status, value: :duplicate %>
+          <%= hidden_field_tag :duplicate_prefix, @duplicate_prefix %>
+          <%= hidden_field_tag :duplicate_code, @duplicate_code %>
+          <%= hidden_field_tag :duplicates_page, @duplicate_page %>
+          <%= hidden_field_tag :missing_prefix, @missing_prefix %>
+          <%= hidden_field_tag :missing_code, @missing_code %>
+          <%= hidden_field_tag :missing_page, @missing_page %>
 
           <div class="space-y-2">
             <%= label_tag :duplicate_mode, "Modo de carga", class: "block text-sm font-medium text-slate-700" %>
@@ -101,8 +114,15 @@
           <p class="text-sm text-slate-600">Pega varias fichas que ya conseguiste para quitarlas de tus faltantes de una sola vez.</p>
         </div>
 
-        <%= form_with model: InventoryItem.new, url: consume_inventory_items_path, class: "mt-5 space-y-4", data: { turbo_frame: "dashboard_panel" } do |form| %>
+        <%= form_with model: InventoryItem.new, url: consume_inventory_items_path, class: "mt-5 space-y-4", data: { turbo_frame: "dashboard_panel", turbo_stream: true } do |form| %>
           <%= form.hidden_field :status, value: :missing %>
+          <%= hidden_field_tag :duplicate_mode, @duplicate_mode %>
+          <%= hidden_field_tag :duplicate_prefix, @duplicate_prefix %>
+          <%= hidden_field_tag :duplicate_code, @duplicate_code %>
+          <%= hidden_field_tag :duplicates_page, @duplicate_page %>
+          <%= hidden_field_tag :missing_prefix, @missing_prefix %>
+          <%= hidden_field_tag :missing_code, @missing_code %>
+          <%= hidden_field_tag :missing_page, @missing_page %>
           <div class="space-y-2">
             <%= form.label :codes, "Fichas conseguidas", for: "resolved_inventory_codes", class: "block text-sm font-medium text-slate-700" %>
             <%= form.text_area :codes,
@@ -122,8 +142,15 @@
           <p class="text-sm text-slate-600">Pega las fichas repetidas que entregaste o cambiaste para descontar una copia por cada aparición.</p>
         </div>
 
-        <%= form_with model: InventoryItem.new, url: consume_inventory_items_path, class: "mt-5 space-y-4", data: { turbo_frame: "dashboard_panel" } do |form| %>
+        <%= form_with model: InventoryItem.new, url: consume_inventory_items_path, class: "mt-5 space-y-4", data: { turbo_frame: "dashboard_panel", turbo_stream: true } do |form| %>
           <%= form.hidden_field :status, value: :duplicate %>
+          <%= hidden_field_tag :duplicate_mode, @duplicate_mode %>
+          <%= hidden_field_tag :duplicate_prefix, @duplicate_prefix %>
+          <%= hidden_field_tag :duplicate_code, @duplicate_code %>
+          <%= hidden_field_tag :duplicates_page, @duplicate_page %>
+          <%= hidden_field_tag :missing_prefix, @missing_prefix %>
+          <%= hidden_field_tag :missing_code, @missing_code %>
+          <%= hidden_field_tag :missing_page, @missing_page %>
           <div class="space-y-2">
             <%= form.label :codes, "Repetidas cambiadas", for: "consumed_duplicate_codes", class: "block text-sm font-medium text-slate-700" %>
             <%= form.text_area :codes,

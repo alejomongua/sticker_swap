@@ -150,7 +150,7 @@ RSpec.describe 'InventoryItems', type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
-      expect(response.body).to include('turbo-stream action="replace" target="missing_table"')
+      expect(response.body).to include('turbo-stream method="morph" action="replace" target="missing_table"')
       expect(response.body).to include('turbo-stream action="replace" target="flash"')
       expect(response.body).to include(sticker.code)
     end
@@ -244,10 +244,38 @@ RSpec.describe 'InventoryItems', type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
-      expect(response.body).to include('turbo-stream action="replace" target="dashboard_panel"')
+      expect(response.body).to include('turbo-stream method="morph" action="replace" target="dashboard_panel"')
       expect(response.body).to include('turbo-stream action="replace" target="flash"')
       expect(response.body).to include('La cantidad de repetidas se actualizó.')
       expect(inventory_item.reload.quantity).to eq(5)
+    end
+
+    it 'preserves duplicate filters after an async quantity update' do
+      user = create(:user)
+      target_item = create(:inventory_item, :duplicate, user: user, quantity: 2,
+                           sticker: create(:sticker, prefix: 'ZZPF', number: 70_001, name: 'Argentina'))
+      other_item = create(:inventory_item, :duplicate, user: user, quantity: 1,
+                          sticker: create(:sticker, prefix: 'ZZPG', number: 70_002, name: 'Brasil'))
+
+      sign_in_as(user)
+
+      patch inventory_item_path(target_item),
+            params: {
+              inventory_item: { quantity: 5 },
+              duplicate_mode: 'single',
+              duplicate_code: target_item.code,
+              missing_page: 1
+            },
+            headers: {
+              'HTTP_REFERER' => dashboard_url,
+              'ACCEPT' => Mime[:turbo_stream].to_s,
+              'Turbo-Frame' => 'dashboard_panel'
+            }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(%(name="duplicate_code" id="duplicate_code" value="#{target_item.code}"))
+      expect(response.body).to include(target_item.code)
+      expect(response.body).not_to include(other_item.code)
     end
 
     it 'removes duplicate items when the quantity is set to zero' do
@@ -281,8 +309,35 @@ RSpec.describe 'InventoryItems', type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
-      expect(response.body).to include('turbo-stream action="replace" target="dashboard_panel"')
+      expect(response.body).to include('turbo-stream method="morph" action="replace" target="dashboard_panel"')
       expect(response.body).to include('La figura ya no figura como faltante.')
+    end
+
+    it 'preserves missing filters after an async remove action' do
+      user = create(:user)
+      target_item = create(:inventory_item, user: user,
+                           sticker: create(:sticker, prefix: 'ZZPH', number: 70_011, name: 'Argentina'))
+      other_item = create(:inventory_item, user: user,
+                          sticker: create(:sticker, prefix: 'ZZPI', number: 70_012, name: 'Brasil'))
+
+      sign_in_as(user)
+
+      delete inventory_item_path(target_item),
+             params: {
+               duplicate_mode: 'single',
+               missing_code: target_item.code,
+               duplicates_page: 1
+             },
+             headers: {
+               'HTTP_REFERER' => dashboard_url,
+               'ACCEPT' => Mime[:turbo_stream].to_s,
+               'Turbo-Frame' => 'dashboard_panel'
+             }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(%(name="missing_code" id="missing_code" value="#{target_item.code}"))
+      expect(response.body).to include('No hay faltantes que coincidan con ese filtro.')
+      expect(response.body).not_to include(other_item.code)
     end
   end
 end

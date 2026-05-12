@@ -65,7 +65,14 @@
                           url: inventory_item_path(item),
                           method: :patch,
                           class: "grid gap-3 sm:grid-cols-[9rem_auto] sm:items-end",
-                          data: { turbo_frame: "dashboard_panel" } do |form| %>
+                          data: { turbo_frame: "dashboard_panel", turbo_stream: true } do |form| %>
+              <%= hidden_field_tag :duplicate_mode, @duplicate_mode %>
+              <%= hidden_field_tag :duplicate_prefix, @duplicate_prefix %>
+              <%= hidden_field_tag :duplicate_code, @duplicate_code %>
+              <%= hidden_field_tag :duplicates_page, @duplicate_page %>
+              <%= hidden_field_tag :missing_prefix, @missing_prefix %>
+              <%= hidden_field_tag :missing_code, @missing_code %>
+              <%= hidden_field_tag :missing_page, @missing_page %>
               <div class="space-y-2">
                 <%= form.label :quantity, "Cantidad para #{item.code}", for: quantity_field_id, class: "block text-sm font-medium text-slate-700" %>
                 <%= form.number_field :quantity, id: quantity_field_id, value: item.quantity, min: 0, step: 1, class: "block w-full rounded-2xl border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>

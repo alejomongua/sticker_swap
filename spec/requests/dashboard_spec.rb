@@ -55,7 +55,7 @@ RSpec.describe "Dashboard", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
-      expect(response.body).to include('turbo-stream action="replace" target="dashboard_panel"')
+      expect(response.body).to include('turbo-stream method="morph" action="replace" target="dashboard_panel"')
       expect(response.body).to include('turbo-stream action="replace" target="flash"')
       expect(response.body).to include("Argentina")
       expect(response.body).not_to include("Brasil")
