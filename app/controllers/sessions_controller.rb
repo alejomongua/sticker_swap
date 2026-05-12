@@ -10,7 +10,7 @@ class SessionsController < ApplicationController
 
     if user = User.authenticate_by(email: credentials[:email].to_s.strip.downcase, password: credentials[:password])
       start_new_session_for user
-      redirect_to after_authentication_url, notice: "Sesión iniciada correctamente."
+      redirect_to after_authentication_url, notice: "Sesión iniciada correctamente.", status: :see_other
     else
       flash.now[:alert] = "Revisa el correo y la contraseña."
       render :new, status: :unprocessable_content

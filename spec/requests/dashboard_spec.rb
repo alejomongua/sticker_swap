@@ -51,7 +51,10 @@ RSpec.describe "Dashboard", type: :request do
 
       get dashboard_path,
           params: { missing_prefix: "ZZTA" },
-          headers: { "ACCEPT" => Mime[:turbo_stream].to_s }
+          headers: {
+            "ACCEPT" => Mime[:turbo_stream].to_s,
+            "Turbo-Frame" => "dashboard_panel"
+          }
 
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq(Mime[:turbo_stream].to_s)

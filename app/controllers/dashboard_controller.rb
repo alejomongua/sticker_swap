@@ -5,16 +5,12 @@ class DashboardController < ApplicationController
   before_action :prepare_missing_table_state, only: :missing_table
 
   def show
-    respond_to do |format|
-      format.html
-      format.turbo_stream { render_dashboard_turbo_stream }
-    end
+    return render_dashboard_turbo_stream if request.format.turbo_stream? && turbo_frame_request_id == "dashboard_panel"
+    return render :show, formats: :html if request.format.turbo_stream?
   end
 
   def missing_table
-    respond_to do |format|
-      format.html
-      format.turbo_stream { render_missing_table_turbo_stream }
-    end
+    return render_missing_table_turbo_stream if request.format.turbo_stream? && turbo_frame_request_id == "missing_table"
+    return render :missing_table, formats: :html if request.format.turbo_stream?
   end
 end
