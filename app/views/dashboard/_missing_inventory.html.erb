@@ -13,7 +13,7 @@
   <%= form_with url: dashboard_path,
                 method: :get,
                 class: "mt-5 grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)_auto] sm:items-end",
-                data: { controller: "inventory-filter", turbo_frame: "dashboard_panel" } do %>
+                data: { controller: "inventory-filter", turbo_frame: "dashboard_panel", turbo_stream: true } do %>
     <%= hidden_field_tag :duplicate_mode, @duplicate_mode %>
     <%= hidden_field_tag :duplicate_prefix, @duplicate_prefix %>
     <%= hidden_field_tag :duplicate_code, @duplicate_code %>
@@ -42,7 +42,7 @@
                                duplicate_prefix: @duplicate_prefix,
                                duplicate_code: @duplicate_code,
                                duplicates_page: @duplicate_page),
-                data: { turbo_frame: "dashboard_panel" },
+                data: { turbo_frame: "dashboard_panel", turbo_stream: true },
                 class: "inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950" %>
   <% end %>
 
@@ -68,7 +68,7 @@
         <%= link_to_if @missing_page > 1,
                        "Anterior",
                        dashboard_path(@dashboard_filters.merge(duplicates_page: @duplicate_page, missing_page: @missing_page - 1)),
-                       data: { turbo_frame: "dashboard_panel" },
+                       data: { turbo_frame: "dashboard_panel", turbo_stream: true },
                        class: "rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" do %>
           <span class="rounded-full border border-slate-100 px-4 py-2 text-slate-300">Anterior</span>
         <% end %>
@@ -78,7 +78,7 @@
         <%= link_to_if @missing_page < @missing_pages,
                        "Siguiente",
                        dashboard_path(@dashboard_filters.merge(duplicates_page: @duplicate_page, missing_page: @missing_page + 1)),
-                       data: { turbo_frame: "dashboard_panel" },
+                       data: { turbo_frame: "dashboard_panel", turbo_stream: true },
                        class: "rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" do %>
           <span class="rounded-full border border-slate-100 px-4 py-2 text-slate-300">Siguiente</span>
         <% end %>

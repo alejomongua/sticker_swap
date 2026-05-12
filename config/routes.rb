@@ -31,7 +31,11 @@ Rails.application.routes.draw do
   get :progreso, to: "progress#show", as: :progress
   get :estadisticas, to: "statistics#show", as: :statistics
   resource :profile, only: %i[ edit update ], path: :perfil
-  resources :inventory_items, only: %i[ create update destroy ], path: :inventario
+  resources :inventory_items, only: %i[ create update destroy ], path: :inventario do
+    collection do
+      post :consume, path: :consumir
+    end
+  end
   get :mercado, to: "matches#index", as: :matches
   resources :swap_offers, only: %i[ index create ], path: :intercambios
   patch "intercambios/:id/aceptar", to: "swap_offers#accept", as: :accept_swap_offer

@@ -81,4 +81,22 @@ class ApplicationController < ActionController::Base
     def human_inventory_status(status)
       status == "duplicate" ? "repetida" : "faltante"
     end
+
+    def render_dashboard_turbo_stream(status: :ok)
+      render turbo_stream: [
+        turbo_stream.replace("flash", partial: "shared/flash_frame"),
+        turbo_stream.replace("dashboard_panel", partial: "dashboard/panel")
+      ], status: status
+    end
+
+    def render_missing_table_turbo_stream(status: :ok)
+      render turbo_stream: [
+        turbo_stream.replace("flash", partial: "shared/flash_frame"),
+        turbo_stream.replace("missing_table", partial: "dashboard/missing_table_frame")
+      ], status: status
+    end
+
+    def turbo_frame_request_id
+      request.headers["Turbo-Frame"]
+    end
 end

@@ -4,10 +4,10 @@ RSpec.describe "Dashboard", type: :request do
   describe "GET /panel" do
     it "orders the prefix filters using the configured catalog sequence" do
       user = create(:user)
-      pan = create(:sticker, prefix: "PAN", number: 2, name: "Panama")
-      arg = create(:sticker, prefix: "ARG", number: 1, name: "Argentina")
-      mex = create(:sticker, prefix: "MEX", number: 3, name: "Mexico")
-      fwc = create(:sticker, prefix: "FWC", number: 4, name: "Mascota")
+      pan = create(:sticker, prefix: "PAN", number: 90_002, name: "Panama")
+      arg = create(:sticker, prefix: "ARG", number: 90_001, name: "Argentina")
+      mex = create(:sticker, prefix: "MEX", number: 90_003, name: "Mexico")
+      fwc = create(:sticker, prefix: "FWC", number: 90_004, name: "Mascota")
 
       create(:inventory_item, user: user, sticker: pan)
       create(:inventory_item, user: user, sticker: arg)
@@ -37,6 +37,42 @@ RSpec.describe "Dashboard", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(missing_table_dashboard_path)
       expect(response.body).to include('data-turbo="false"')
+    end
+
+    it "filters asynchronously with turbo streams" do
+      user = create(:user)
+      arg_sticker = create(:sticker, prefix: "ZZTA", number: 50_001, name: "Argentina")
+      bra_sticker = create(:sticker, prefix: "ZZTB", number: 50_002, name: "Brasil")
+
+      create(:inventory_item, user: user, sticker: arg_sticker)
+      create(:inventory_item, user: user, sticker: bra_sticker)
+
+      sign_in_as(user)
+
+      get dashboard_path,
+          params: { missing_prefix: "ZZTA" },
+          headers: { "ACCEPT" => Mime[:turbo_stream].to_s }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
+      expect(response.body).to include('turbo-stream action="replace" target="dashboard_panel"')
+      expect(response.body).to include('turbo-stream action="replace" target="flash"')
+      expect(response.body).to include("Argentina")
+      expect(response.body).not_to include("Brasil")
+    end
+
+    it "renders bulk forms for resolved missing stickers and consumed duplicates" do
+      user = create(:user)
+      sign_in_as(user)
+
+      get dashboard_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Registrar conseguidas")
+      expect(response.body).to include("Registrar repetidas cambiadas")
+      expect(response.body).to include("Quitar de faltantes")
+      expect(response.body).to include("Descontar repetidas")
+      expect(response.body).to include(consume_inventory_items_path)
     end
 
     it "filters missing items by prefix and exact code" do

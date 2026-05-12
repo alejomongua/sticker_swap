@@ -28,7 +28,7 @@ RSpec.describe 'InventoryItems', type: :request do
       end.to change(user.inventory_items, :count).by(1)
 
       expect(response).to redirect_to(dashboard_path)
-      expect(flash[:notice]).to be_nil
+      expect(flash[:notice]).not_to eq('Inventario actualizado.')
       expect(flash[:alert]).to eq('No se encontraron estas fichas faltantes: NOPE99999.')
       expect(user.inventory_items.find_by!(sticker: sticker)).to be_missing
     end
@@ -144,10 +144,74 @@ RSpec.describe 'InventoryItems', type: :request do
            params: { inventory_item: { status: 'missing', codes: sticker.code } },
            headers: {
              'HTTP_REFERER' => missing_table_dashboard_url,
+             'ACCEPT' => Mime[:turbo_stream].to_s,
              'Turbo-Frame' => 'missing_table'
            }
 
-      expect(response).to redirect_to(missing_table_dashboard_path)
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
+      expect(response.body).to include('turbo-stream action="replace" target="missing_table"')
+      expect(response.body).to include('turbo-stream action="replace" target="flash"')
+      expect(response.body).to include(sticker.code)
+    end
+  end
+
+  describe 'POST /inventario/consumir' do
+    it 'removes missing items in bulk and reports unknown or already resolved codes' do
+      user = create(:user)
+      resolved = create(:sticker, prefix: 'ZZCJ', number: 11_001, name: 'Argentina', group_name: 'Grupo J')
+      still_missing = create(:sticker, prefix: 'ZZCK', number: 11_002, name: 'Brasil', group_name: 'Grupo C')
+      already_resolved = create(:sticker, prefix: 'ZZCL', number: 11_003, name: 'Senegal', group_name: 'Grupo A')
+
+      create(:inventory_item, user: user, sticker: resolved)
+      create(:inventory_item, user: user, sticker: still_missing)
+
+      sign_in_as(user)
+
+      expect do
+        post consume_inventory_items_path, params: {
+          inventory_item: {
+            status: 'missing',
+            codes: "#{resolved.code}\n#{already_resolved.code}\nNOPE99999"
+          }
+        }
+      end.to change(user.inventory_items, :count).by(-1)
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(flash[:notice]).to eq('Tus faltantes se actualizaron.')
+      expect(flash[:alert]).to include('No se encontraron: NOPE99999.')
+      expect(flash[:alert]).to include("Estas fichas no figuraban como faltantes: #{already_resolved.code}.")
+      expect(user.inventory_items.find_by(sticker: resolved)).to be_nil
+      expect(user.inventory_items.find_by!(sticker: still_missing)).to be_missing
+    end
+
+    it 'decrements duplicate quantities in bulk and removes exhausted items' do
+      user = create(:user)
+      kept_duplicate = create(:sticker, prefix: 'ZZCM', number: 11_011, name: 'Argentina', group_name: 'Grupo J')
+      exhausted_duplicate = create(:sticker, prefix: 'ZZCN', number: 11_012, name: 'Brasil', group_name: 'Grupo C')
+      not_owned = create(:sticker, prefix: 'ZZCO', number: 11_013, name: 'Senegal', group_name: 'Grupo A')
+
+      create(:inventory_item, :duplicate, user: user, sticker: kept_duplicate, quantity: 3)
+      create(:inventory_item, :duplicate, user: user, sticker: exhausted_duplicate, quantity: 1)
+
+      sign_in_as(user)
+
+      expect do
+        post consume_inventory_items_path, params: {
+          inventory_item: {
+            status: 'duplicate',
+            codes: "#{kept_duplicate.code}\n#{kept_duplicate.code}\n#{exhausted_duplicate.code}\n#{exhausted_duplicate.code}\n#{not_owned.code}\nNOPE99999"
+          }
+        }
+      end.to change(user.inventory_items, :count).by(-1)
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(flash[:notice]).to eq('Tus repetidas se descontaron.')
+      expect(flash[:alert]).to include('No se encontraron: NOPE99999.')
+      expect(flash[:alert]).to include("Estas fichas no estaban en tus repetidas: #{not_owned.code}.")
+      expect(flash[:alert]).to include("No tenías suficientes copias para descontar todas las apariciones de: #{exhausted_duplicate.code}.")
+      expect(user.inventory_items.find_by!(sticker: kept_duplicate).quantity).to eq(1)
+      expect(user.inventory_items.find_by(sticker: exhausted_duplicate)).to be_nil
     end
   end
 
@@ -164,6 +228,28 @@ RSpec.describe 'InventoryItems', type: :request do
       expect(inventory_item.reload.quantity).to eq(5)
     end
 
+    it 'updates duplicate items asynchronously in the dashboard panel' do
+      user = create(:user)
+      inventory_item = create(:inventory_item, :duplicate, user: user, quantity: 2)
+
+      sign_in_as(user)
+
+      patch inventory_item_path(inventory_item),
+            params: { inventory_item: { quantity: 5 } },
+            headers: {
+              'HTTP_REFERER' => dashboard_url,
+              'ACCEPT' => Mime[:turbo_stream].to_s,
+              'Turbo-Frame' => 'dashboard_panel'
+            }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
+      expect(response.body).to include('turbo-stream action="replace" target="dashboard_panel"')
+      expect(response.body).to include('turbo-stream action="replace" target="flash"')
+      expect(response.body).to include('La cantidad de repetidas se actualizó.')
+      expect(inventory_item.reload.quantity).to eq(5)
+    end
+
     it 'removes duplicate items when the quantity is set to zero' do
       user = create(:user)
       inventory_item = create(:inventory_item, :duplicate, user: user, quantity: 2)
@@ -175,6 +261,28 @@ RSpec.describe 'InventoryItems', type: :request do
       end.to change(user.inventory_items, :count).by(-1)
 
       expect(response).to redirect_to(dashboard_path)
+    end
+  end
+
+  describe 'DELETE /inventario/:id' do
+    it 'removes missing items asynchronously in the dashboard panel' do
+      user = create(:user)
+      inventory_item = create(:inventory_item, user: user)
+
+      sign_in_as(user)
+
+      expect do
+        delete inventory_item_path(inventory_item), headers: {
+          'HTTP_REFERER' => dashboard_url,
+          'ACCEPT' => Mime[:turbo_stream].to_s,
+          'Turbo-Frame' => 'dashboard_panel'
+        }
+      end.to change(user.inventory_items, :count).by(-1)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
+      expect(response.body).to include('turbo-stream action="replace" target="dashboard_panel"')
+      expect(response.body).to include('La figura ya no figura como faltante.')
     end
   end
 end
