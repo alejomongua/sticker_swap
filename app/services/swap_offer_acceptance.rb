@@ -11,10 +11,14 @@ class SwapOfferAcceptance
       raise InvalidState, "La propuesta ya fue respondida." unless swap_offer.pending?
 
       inventory_items = locked_inventory_items
-      consume_required_item!(inventory_items, swap_offer.sender_id, swap_offer.offered_sticker_id, "duplicate", "La persona que envió la propuesta ya no tiene esa repetida.")
-      consume_required_item!(inventory_items, swap_offer.receiver_id, swap_offer.offered_sticker_id, "missing", "Ya no necesitas la figura ofrecida.")
-      consume_required_item!(inventory_items, swap_offer.receiver_id, swap_offer.requested_sticker_id, "duplicate", "Ya no tienes la repetida solicitada.")
-      consume_required_item!(inventory_items, swap_offer.sender_id, swap_offer.requested_sticker_id, "missing", "La otra persona ya no necesita la figura solicitada.")
+      swap_offer.offered_sticker_ids.each do |sticker_id|
+        consume_required_item!(inventory_items, swap_offer.sender_id, sticker_id, "duplicate", "La persona que envió la propuesta ya no tiene una de las figuras ofrecidas.")
+        consume_required_item!(inventory_items, swap_offer.receiver_id, sticker_id, "missing", "Ya no necesitas una de las figuras ofrecidas.")
+      end
+      swap_offer.requested_sticker_ids.each do |sticker_id|
+        consume_required_item!(inventory_items, swap_offer.receiver_id, sticker_id, "duplicate", "Ya no tienes una de las figuras solicitadas.")
+        consume_required_item!(inventory_items, swap_offer.sender_id, sticker_id, "missing", "La otra persona ya no necesita una de las figuras solicitadas.")
+      end
 
       swap_offer.update!(status: :accepted, responded_at: Time.current)
     end
@@ -24,9 +28,11 @@ class SwapOfferAcceptance
     attr_reader :swap_offer
 
     def locked_inventory_items
+      sticker_ids = (swap_offer.offered_sticker_ids + swap_offer.requested_sticker_ids).uniq
+
       InventoryItem.lock.where(
         user_id: [ swap_offer.sender_id, swap_offer.receiver_id ],
-        sticker_id: [ swap_offer.offered_sticker_id, swap_offer.requested_sticker_id ]
+        sticker_id: sticker_ids
       ).index_by { |item| [ item.user_id, item.sticker_id, item.status ] }
     end
 

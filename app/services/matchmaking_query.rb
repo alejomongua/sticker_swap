@@ -16,6 +16,10 @@ class MatchmakingQuery
     end.sort_by { |summary| [ summary.direct_match? ? 0 : 1, summary.user.username.downcase ] }
   end
 
+  def summary_for_user(other_user)
+    summary_for(other_user)
+  end
+
   private
     attr_reader :group
     attr_reader :user

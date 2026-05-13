@@ -53,16 +53,6 @@ class Sticker < ApplicationRecord
   PREFIX_ORDER_INDEX = PREFIX_ORDER.each_with_index.to_h.freeze
 
   has_many :inventory_items, dependent: :destroy
-  has_many :offered_swap_offers,
-           class_name: "SwapOffer",
-           foreign_key: :offered_sticker_id,
-           inverse_of: :offered_sticker,
-           dependent: :restrict_with_exception
-  has_many :requested_swap_offers,
-           class_name: "SwapOffer",
-           foreign_key: :requested_sticker_id,
-           inverse_of: :requested_sticker,
-           dependent: :restrict_with_exception
 
   normalizes :group_name, with: ->(value) { value.to_s.strip }
   normalizes :name, with: ->(value) { value.to_s.strip }

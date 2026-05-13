@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe 'Trading flow', type: :system do
   it 'lets a user manage inventory and send a swap offer' do
-    offered_sticker = create(:sticker, prefix: 'ARG', number: 1, name: 'Argentina', group_name: 'Grupo J')
-    requested_sticker = create(:sticker, prefix: 'BRA', number: 2, name: 'Brasil', group_name: 'Grupo C')
+    offered_sticker = create(:sticker, prefix: 'TSU', number: 10_024, name: 'Argentina', group_name: 'Grupo J')
+    requested_sticker = create(:sticker, prefix: 'TSV', number: 10_025, name: 'Brasil', group_name: 'Grupo C')
     current_user = create(:user, email: 'jugador@example.com', username: 'jugador', create_default_group: false)
     partner = create(:user, email: 'contacto@example.com', username: 'contacto', create_default_group: false)
     trading_group = create(:group, admin_user: current_user)
@@ -28,9 +28,13 @@ RSpec.describe 'Trading flow', type: :system do
     click_link 'Mercado'
 
     expect(page).to have_content(partner.username)
-    expect(page).to have_button('Enviar propuesta')
+    expect(page).to have_button('Proponer trato')
 
-    click_button 'Enviar propuesta'
+    within('section', text: partner.username) do
+      fill_in 'Solicitar', with: requested_sticker.code
+      fill_in 'Ofrecer', with: offered_sticker.code
+      click_button 'Proponer trato'
+    end
 
     expect(page).to have_content('La propuesta se envió correctamente.')
 
@@ -40,8 +44,8 @@ RSpec.describe 'Trading flow', type: :system do
   end
 
   it 'lets a user update repeated quantities and clear missing stickers from the dashboard' do
-    duplicate_sticker = create(:sticker, prefix: 'ARG', number: 1, name: 'Argentina', group_name: 'Grupo J')
-    missing_sticker = create(:sticker, prefix: 'BRA', number: 2, name: 'Brasil', group_name: 'Grupo C')
+    duplicate_sticker = create(:sticker, prefix: 'TSW', number: 10_026, name: 'Argentina', group_name: 'Grupo J')
+    missing_sticker = create(:sticker, prefix: 'TSX', number: 10_027, name: 'Brasil', group_name: 'Grupo C')
     current_user = create(:user, email: 'inventario@example.com', username: 'inventario')
 
     visit new_session_path

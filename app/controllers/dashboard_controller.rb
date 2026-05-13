@@ -6,11 +6,13 @@ class DashboardController < ApplicationController
 
   def show
     return render_dashboard_turbo_stream if request.format.turbo_stream? && turbo_frame_request_id == "dashboard_panel"
-    return render :show, formats: :html if request.format.turbo_stream?
+
+    render :show, formats: :html if request.format.turbo_stream?
   end
 
   def missing_table
     return render_missing_table_turbo_stream if request.format.turbo_stream? && turbo_frame_request_id == "missing_table"
-    return render :missing_table, formats: :html if request.format.turbo_stream?
+
+    render :missing_table, formats: :html if request.format.turbo_stream?
   end
 end

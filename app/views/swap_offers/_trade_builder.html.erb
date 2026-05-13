@@ -1,0 +1,95 @@
+<%= form_with scope: :swap_offer, url: swap_offers_path, class: "space-y-5", data: { controller: "trade-builder" } do |form| %>
+  <%= form.hidden_field :receiver_id, value: receiver_id %>
+  <% if countered_from_id.present? %>
+    <%= form.hidden_field :countered_from_id, value: countered_from_id %>
+  <% end %>
+
+  <div class="grid gap-5 lg:grid-cols-2">
+    <section>
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Solicitar</h3>
+          <p class="mt-1 text-sm text-slate-600">Selecciona fichas que la otra persona puede darte.</p>
+        </div>
+        <span class="text-xs font-medium text-slate-500"><%= requestable_stickers.size %> disponibles</span>
+      </div>
+
+      <% if requestable_stickers.any? %>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <% requestable_stickers.each do |sticker| %>
+            <button
+              type="button"
+              class="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50"
+              data-action="trade-builder#toggle"
+              data-trade-builder-list="requested"
+              data-trade-builder-code="<%= sticker.code %>"
+              data-trade-builder-target="badge"
+              aria-pressed="false"
+            >
+              <%= sticker.display_name %>
+            </button>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="mt-3 text-sm text-slate-600">Ahora mismo no hay fichas disponibles para pedir.</p>
+      <% end %>
+
+      <div class="mt-4 space-y-2">
+        <%= form.label :requested_codes_text, "Solicitar", class: "text-sm font-medium text-slate-700" %>
+        <%= form.text_area :requested_codes_text,
+                           value: initial_requested_codes_text,
+                           rows: 3,
+                           placeholder: "Ej: ARG1, BRA2",
+                           class: "block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-accent-600 focus:ring-accent-600",
+                           data: { action: "input->trade-builder#sync", trade_builder_target: "requestedTextarea" } %>
+      </div>
+    </section>
+
+    <section>
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Ofrecer</h3>
+          <p class="mt-1 text-sm text-slate-600">Selecciona fichas tuyas que le sirvan a la otra persona.</p>
+        </div>
+        <span class="text-xs font-medium text-slate-500"><%= offerable_stickers.size %> disponibles</span>
+      </div>
+
+      <% if offerable_stickers.any? %>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <% offerable_stickers.each do |sticker| %>
+            <button
+              type="button"
+              class="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50"
+              data-action="trade-builder#toggle"
+              data-trade-builder-list="offered"
+              data-trade-builder-code="<%= sticker.code %>"
+              data-trade-builder-target="badge"
+              aria-pressed="false"
+            >
+              <%= sticker.display_name %>
+            </button>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="mt-3 text-sm text-slate-600">Ahora mismo no tienes fichas que le sirvan a la otra persona.</p>
+      <% end %>
+
+      <div class="mt-4 space-y-2">
+        <%= form.label :offered_codes_text, "Ofrecer", class: "text-sm font-medium text-slate-700" %>
+        <%= form.text_area :offered_codes_text,
+                           value: initial_offered_codes_text,
+                           rows: 3,
+                           placeholder: "Ej: COL5, MEX12",
+                           class: "block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-accent-600 focus:ring-accent-600",
+                           data: { action: "input->trade-builder#sync", trade_builder_target: "offeredTextarea" } %>
+      </div>
+    </section>
+  </div>
+
+  <div class="flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+    <p class="text-xs text-slate-500">Puedes escribir códigos separados por comas o usar los badges para completar ambos campos.</p>
+    <%= form.submit submit_label,
+                    class: "inline-flex items-center justify-center rounded-2xl bg-accent-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-accent-900 disabled:cursor-not-allowed disabled:opacity-60",
+                    data: { trade_builder_target: "submit" } %>
+  </div>
+<% end %>

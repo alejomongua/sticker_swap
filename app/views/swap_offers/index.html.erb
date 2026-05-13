@@ -18,15 +18,38 @@
           <% badge_classes = case offer.status
              when "accepted" then "bg-emerald-100 text-emerald-900"
              when "declined" then "bg-rose-100 text-rose-900"
+             when "countered" then "bg-sky-100 text-sky-900"
              else "bg-amber-100 text-amber-900"
              end %>
           <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div class="space-y-1">
+              <div class="space-y-2">
                 <h3 class="font-semibold text-slate-950"><%= offer.sender.username %></h3>
-                <p class="text-sm text-slate-700">Te ofrece <strong><%= offer.offered_sticker.display_name %></strong> y pide <strong><%= offer.requested_sticker.display_name %></strong>.</p>
+                <% if offer.countered_from_id.present? %>
+                  <p class="text-xs font-medium uppercase tracking-[0.18em] text-accent-700">Contraoferta recibida</p>
+                <% end %>
               </div>
               <span class="inline-flex rounded-full px-3 py-2 text-sm font-medium <%= badge_classes %>"><%= offer.status_label %></span>
+            </div>
+
+            <div class="mt-4 grid gap-4 lg:grid-cols-2">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Te ofrece</p>
+                <div class="mt-2 flex flex-wrap gap-2">
+                  <% offer.offered_stickers.each do |sticker| %>
+                    <span class="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800"><%= sticker.display_name %></span>
+                  <% end %>
+                </div>
+              </div>
+
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Te solicita</p>
+                <div class="mt-2 flex flex-wrap gap-2">
+                  <% offer.requested_stickers.each do |sticker| %>
+                    <span class="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800"><%= sticker.display_name %></span>
+                  <% end %>
+                </div>
+              </div>
             </div>
 
             <% if offer.pending? %>
@@ -34,6 +57,25 @@
                 <%= button_to "Aceptar", accept_swap_offer_path(offer), method: :patch, class: "rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-emerald-700" %>
                 <%= button_to "Rechazar", decline_swap_offer_path(offer), method: :patch, class: "rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950" %>
               </div>
+
+              <% if (counter_summary = @counter_summaries[offer.id])&.direct_match? %>
+                <details class="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                  <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-slate-700">Modificar y devolver</summary>
+
+                  <div class="border-t border-slate-200 p-4">
+                    <%= render "trade_builder",
+                               receiver_id: offer.sender_id,
+                               countered_from_id: offer.id,
+                               requestable_stickers: counter_summary.can_request,
+                               offerable_stickers: counter_summary.can_offer,
+                               initial_requested_codes_text: offer.offered_codes_text,
+                               initial_offered_codes_text: offer.requested_codes_text,
+                               submit_label: "Enviar contraoferta" %>
+                  </div>
+                </details>
+              <% else %>
+                <p class="mt-4 text-sm text-slate-600">Con el inventario actual ya no hay una combinación válida para modificar este trato.</p>
+              <% end %>
             <% end %>
           </article>
         <% end %>
@@ -55,15 +97,40 @@
           <% badge_classes = case offer.status
              when "accepted" then "bg-emerald-100 text-emerald-900"
              when "declined" then "bg-rose-100 text-rose-900"
+             when "countered" then "bg-sky-100 text-sky-900"
              else "bg-amber-100 text-amber-900"
              end %>
           <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div class="space-y-1">
+              <div class="space-y-2">
                 <h3 class="font-semibold text-slate-950"><%= offer.receiver.username %></h3>
-                <p class="text-sm text-slate-700">Ofreciste <strong><%= offer.offered_sticker.display_name %></strong> y pediste <strong><%= offer.requested_sticker.display_name %></strong>.</p>
+                <% if offer.countered_from_id.present? %>
+                  <p class="text-xs font-medium uppercase tracking-[0.18em] text-accent-700">Contraoferta enviada</p>
+                <% elsif offer.counter_offer.present? %>
+                  <p class="text-xs font-medium uppercase tracking-[0.18em] text-sky-700">Te respondieron con una contraoferta</p>
+                <% end %>
               </div>
               <span class="inline-flex rounded-full px-3 py-2 text-sm font-medium <%= badge_classes %>"><%= offer.status_label %></span>
+            </div>
+
+            <div class="mt-4 grid gap-4 lg:grid-cols-2">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ofreciste</p>
+                <div class="mt-2 flex flex-wrap gap-2">
+                  <% offer.offered_stickers.each do |sticker| %>
+                    <span class="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800"><%= sticker.display_name %></span>
+                  <% end %>
+                </div>
+              </div>
+
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Solicitaste</p>
+                <div class="mt-2 flex flex-wrap gap-2">
+                  <% offer.requested_stickers.each do |sticker| %>
+                    <span class="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800"><%= sticker.display_name %></span>
+                  <% end %>
+                </div>
+              </div>
             </div>
           </article>
         <% end %>

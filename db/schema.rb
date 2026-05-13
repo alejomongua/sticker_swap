@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_10_103000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_12_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -70,20 +70,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_10_103000) do
   end
 
   create_table "swap_offers", force: :cascade do |t|
+    t.bigint "countered_from_id"
     t.datetime "created_at", null: false
     t.bigint "group_id"
-    t.bigint "offered_sticker_id", null: false
+    t.integer "offered_sticker_ids", default: [], null: false, array: true
     t.bigint "receiver_id", null: false
-    t.bigint "requested_sticker_id", null: false
+    t.integer "requested_sticker_ids", default: [], null: false, array: true
     t.datetime "responded_at"
     t.bigint "sender_id", null: false
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.index ["countered_from_id"], name: "index_swap_offers_on_countered_from_id"
     t.index ["group_id"], name: "index_swap_offers_on_group_id"
-    t.index ["offered_sticker_id"], name: "index_swap_offers_on_offered_sticker_id"
     t.index ["receiver_id", "status"], name: "index_swap_offers_on_receiver_id_and_status"
     t.index ["receiver_id"], name: "index_swap_offers_on_receiver_id"
-    t.index ["requested_sticker_id"], name: "index_swap_offers_on_requested_sticker_id"
     t.index ["sender_id", "status"], name: "index_swap_offers_on_sender_id_and_status"
     t.index ["sender_id"], name: "index_swap_offers_on_sender_id"
   end
@@ -108,8 +108,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_10_103000) do
   add_foreign_key "inventory_items", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "swap_offers", "groups"
-  add_foreign_key "swap_offers", "stickers", column: "offered_sticker_id"
-  add_foreign_key "swap_offers", "stickers", column: "requested_sticker_id"
+  add_foreign_key "swap_offers", "swap_offers", column: "countered_from_id"
   add_foreign_key "swap_offers", "users", column: "receiver_id"
   add_foreign_key "swap_offers", "users", column: "sender_id"
   add_foreign_key "users", "groups", column: "active_group_id"

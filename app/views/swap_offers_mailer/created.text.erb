@@ -2,8 +2,8 @@ Hola <%= @receiver.username %>,
 
 <%= @sender.username %> te envió una propuesta de intercambio.
 
-Te ofrece: <%= @swap_offer.offered_sticker.display_name %>
-Te pide: <%= @swap_offer.requested_sticker.display_name %>
+Te ofrece: <%= @swap_offer.offered_stickers_summary %>
+Te pide: <%= @swap_offer.requested_stickers_summary %>
 
 Revísala aquí:
 <%= swap_offers_url %>
