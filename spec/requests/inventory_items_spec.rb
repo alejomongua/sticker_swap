@@ -215,6 +215,36 @@ RSpec.describe 'InventoryItems', type: :request do
     end
   end
 
+  describe 'POST /inventario/nuevas' do
+    it 'removes missing items first and sends extra copies to duplicates in the same request' do
+      user = create(:user)
+      missing_sticker = create(:sticker, prefix: 'ZZNP', number: 12_001, name: 'Argentina', group_name: 'Grupo J')
+      duplicate_sticker = create(:sticker, prefix: 'ZZNQ', number: 12_002, name: 'Brasil', group_name: 'Grupo C')
+      owned_sticker = create(:sticker, prefix: 'ZZNR', number: 12_003, name: 'Senegal', group_name: 'Grupo A')
+
+      create(:inventory_item, user: user, sticker: missing_sticker)
+      create(:inventory_item, :duplicate, user: user, sticker: duplicate_sticker, quantity: 2)
+
+      sign_in_as(user)
+
+      expect do
+        post add_new_inventory_items_path, params: {
+          inventory_item: {
+            codes: "#{missing_sticker.code}\n#{missing_sticker.code}\n#{duplicate_sticker.code}\n#{owned_sticker.code}\nNOPE99999"
+          }
+        }
+      end.to change(user.inventory_items, :count).by(1)
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(flash[:notice]).to eq('Nuevas figuras registradas.')
+      expect(flash[:alert]).to eq('No se encontraron: NOPE99999.')
+      expect(user.inventory_items.find_by!(sticker: missing_sticker)).to be_duplicate
+      expect(user.inventory_items.find_by!(sticker: missing_sticker).quantity).to eq(1)
+      expect(user.inventory_items.find_by!(sticker: duplicate_sticker).quantity).to eq(3)
+      expect(user.inventory_items.find_by!(sticker: owned_sticker).quantity).to eq(1)
+    end
+  end
+
   describe 'PATCH /inventario/:id' do
     it 'updates the quantity for duplicate items' do
       user = create(:user)

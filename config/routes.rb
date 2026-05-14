@@ -33,6 +33,7 @@ Rails.application.routes.draw do
   resource :profile, only: %i[ edit update ], path: :perfil
   resources :inventory_items, only: %i[ create update destroy ], path: :inventario do
     collection do
+      post :add_new, path: :nuevas
       post :consume, path: :consumir
     end
   end

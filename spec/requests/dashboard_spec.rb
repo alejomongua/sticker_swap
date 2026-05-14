@@ -78,6 +78,29 @@ RSpec.describe "Dashboard", type: :request do
       expect(response.body).to include(consume_inventory_items_path)
     end
 
+    it "renders the new items form and clipboard export buttons" do
+      user = create(:user)
+      missing_sticker = create(:sticker, prefix: "ZZXA", number: 60_001, name: "Argentina")
+      duplicate_sticker = create(:sticker, prefix: "ZZXB", number: 60_002, name: "Brasil")
+
+      create(:inventory_item, user: user, sticker: missing_sticker)
+      create(:inventory_item, :duplicate, user: user, sticker: duplicate_sticker, quantity: 2)
+
+      sign_in_as(user)
+
+      get dashboard_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Agregar nuevas figuras")
+      expect(response.body).to include("Registrar nuevas figuras")
+      expect(response.body).to include(add_new_inventory_items_path)
+      expect(response.body).to include("Copiar faltantes")
+      expect(response.body).to include("Copiar repetidas")
+      expect(response.body).to include(user.missing_codes_text)
+      expect(response.body).to include(user.duplicate_codes_text)
+      expect(response.body).to include('data-controller="clipboard"')
+    end
+
     it "filters missing items by prefix and exact code" do
       user = create(:user)
       arg_sticker = create(:sticker, prefix: "ZZMA", number: 10_001, name: "Argentina")

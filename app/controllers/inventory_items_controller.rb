@@ -22,6 +22,22 @@ class InventoryItemsController < ApplicationController
     end
   end
 
+  def add_new
+    result = InventoryNewItemsUpsert.new(
+      user: current_user,
+      codes: inventory_item_params[:codes]
+    ).call
+
+    if result.success?
+      set_notice(new_items_success_message_for(result))
+      append_inventory_alert(consume_unknown_codes_message_for(result))
+
+      respond_after_inventory_change(redirect_params: { duplicate_mode: params[:duplicate_mode] })
+    else
+      respond_after_inventory_failure(result.error_message, redirect_params: { duplicate_mode: params[:duplicate_mode] })
+    end
+  end
+
   def consume
     status = inventory_item_params[:status]
     result = InventoryBulkConsume.new(
@@ -193,6 +209,12 @@ class InventoryItemsController < ApplicationController
       return if result.processed_count.zero?
 
       status == "duplicate" ? "Tus repetidas se descontaron." : "Tus faltantes se actualizaron."
+    end
+
+    def new_items_success_message_for(result)
+      return if result.processed_count.zero?
+
+      "Nuevas figuras registradas."
     end
 
     def consume_unknown_codes_message_for(result)

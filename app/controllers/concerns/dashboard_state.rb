@@ -29,6 +29,9 @@ module DashboardState
       filtered_duplicate_items = duplicate_items_scope(state)
       filtered_missing_items = missing_items_scope(state)
 
+      @duplicate_export_codes_text = inventory_codes_text_for(filtered_duplicate_items, repeat_by_quantity: true)
+      @missing_export_codes_text = inventory_codes_text_for(filtered_missing_items)
+
       @duplicate_items_count = filtered_duplicate_items.count
       @duplicate_pages = [ (@duplicate_items_count.to_f / DUPLICATES_PER_PAGE).ceil, 1 ].max
       @duplicate_page = duplicate_page_param(@duplicate_pages, state)
@@ -111,5 +114,12 @@ module DashboardState
 
     def sorted_prefixes_for(scope)
       Sticker.sorted_prefixes(scope.joins(:sticker).distinct.pluck("stickers.prefix"))
+    end
+
+    def inventory_codes_text_for(items, repeat_by_quantity: false)
+      items.to_a.flat_map do |inventory_item|
+        occurrences = repeat_by_quantity ? inventory_item.quantity : 1
+        Array.new(occurrences, inventory_item.code)
+      end.join(", ")
     end
 end
