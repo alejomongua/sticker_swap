@@ -29,9 +29,6 @@ module DashboardState
       filtered_duplicate_items = duplicate_items_scope(state)
       filtered_missing_items = missing_items_scope(state)
 
-      @duplicate_export_codes_text = inventory_codes_text_for(filtered_duplicate_items, repeat_by_quantity: true)
-      @missing_export_codes_text = inventory_codes_text_for(filtered_missing_items)
-
       @duplicate_items_count = filtered_duplicate_items.count
       @duplicate_pages = [ (@duplicate_items_count.to_f / DUPLICATES_PER_PAGE).ceil, 1 ].max
       @duplicate_page = duplicate_page_param(@duplicate_pages, state)
@@ -55,6 +52,16 @@ module DashboardState
       @missing_total_count = current_user.inventory_items.missing.count
       @missing_items_by_sticker_id = current_user.missing_items.includes(:sticker).index_by(&:sticker_id)
       @stickers_by_prefix = Sticker.catalog_order.group_by(&:prefix)
+    end
+
+    def prepare_import_export_state
+      @missing_total_count = current_user.inventory_items.missing.count
+      @duplicate_items_count = current_user.inventory_items.duplicate.count
+      @duplicate_copies_count = current_user.inventory_items.duplicate.sum(:quantity)
+      @missing_codes_text = current_user.missing_codes_text
+      @duplicate_codes_text = current_user.duplicate_codes_text
+      @external_inventory_text ||= ""
+      @external_inventory_match ||= nil
     end
 
     def current_dashboard_state_params
@@ -116,10 +123,4 @@ module DashboardState
       Sticker.sorted_prefixes(scope.joins(:sticker).distinct.pluck("stickers.prefix"))
     end
 
-    def inventory_codes_text_for(items, repeat_by_quantity: false)
-      items.to_a.flat_map do |inventory_item|
-        occurrences = repeat_by_quantity ? inventory_item.quantity : 1
-        Array.new(occurrences, inventory_item.code)
-      end.join(", ")
-    end
 end

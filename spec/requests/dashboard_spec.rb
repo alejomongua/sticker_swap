@@ -78,7 +78,7 @@ RSpec.describe "Dashboard", type: :request do
       expect(response.body).to include(consume_inventory_items_path)
     end
 
-    it "renders the new items form and clipboard export buttons" do
+    it "renders the new items form and links to the import/export page" do
       user = create(:user)
       missing_sticker = create(:sticker, prefix: "ZZXA", number: 60_001, name: "Argentina")
       duplicate_sticker = create(:sticker, prefix: "ZZXB", number: 60_002, name: "Brasil")
@@ -94,11 +94,10 @@ RSpec.describe "Dashboard", type: :request do
       expect(response.body).to include("Agregar nuevas figuras")
       expect(response.body).to include("Registrar nuevas figuras")
       expect(response.body).to include(add_new_inventory_items_path)
-      expect(response.body).to include("Copiar faltantes")
-      expect(response.body).to include("Copiar repetidas")
-      expect(response.body).to include(user.missing_codes_text)
-      expect(response.body).to include(user.duplicate_codes_text)
-      expect(response.body).to include('data-controller="clipboard"')
+      expect(response.body).to include("Importar / exportar")
+      expect(response.body).to include(import_export_dashboard_path)
+      expect(response.body).not_to include("Copiar faltantes")
+      expect(response.body).not_to include("Copiar repetidas")
     end
 
     it "filters missing items by prefix and exact code" do
@@ -263,6 +262,89 @@ RSpec.describe "Dashboard", type: :request do
       expect(response.body).to include(sticker.code)
       expect(response.body).to include('<turbo-frame id="missing_table">')
       expect(response.body).to include('data-turbo-frame="missing_table"')
+    end
+  end
+
+  describe "GET /panel/importar-exportar" do
+    it "renders the dedicated import/export page with current text exports" do
+      user = create(:user)
+      missing_sticker = create(:sticker, prefix: "ZZXE", number: 61_001, name: "Argentina")
+      duplicate_sticker = create(:sticker, prefix: "ZZXF", number: 61_002, name: "Brasil")
+
+      create(:inventory_item, user: user, sticker: missing_sticker)
+      create(:inventory_item, :duplicate, user: user, sticker: duplicate_sticker, quantity: 2)
+
+      sign_in_as(user)
+
+      get import_export_dashboard_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Importar y exportar")
+      expect(response.body).to include("Importar desde Figuritas App")
+      expect(response.body).to include(import_inventory_items_path)
+      expect(response.body).to include("Comparar una lista externa")
+      expect(response.body).to include(compare_import_export_dashboard_path)
+      expect(response.body).to include("Copiar faltantes")
+      expect(response.body).to include("Copiar repetidas")
+      expect(response.body).to include(user.missing_codes_text)
+      expect(response.body).to include(user.duplicate_codes_text)
+      expect(response.body).to include('data-controller="clipboard"')
+      expect(response.body).to include("Volver al panel")
+    end
+  end
+
+  describe "POST /panel/importar-exportar/comparar" do
+    it "shows what the current user can offer and receive from a pasted figuritas.app list" do
+      user = create(:user)
+      offerable = create(:sticker, prefix: "ZZMG", number: 62_001, name: "Argentina")
+      requestable = create(:sticker, prefix: "ZZMH", number: 62_002, name: "Brasil")
+      unrelated = create(:sticker, prefix: "ZZMI", number: 62_003, name: "Chile")
+
+      create(:inventory_item, :duplicate, user: user, sticker: offerable, quantity: 2)
+      create(:inventory_item, user: user, sticker: requestable)
+      create(:inventory_item, :duplicate, user: user, sticker: unrelated, quantity: 1)
+
+      sign_in_as(user)
+
+      post compare_import_export_dashboard_path, params: {
+        external_inventory_match: {
+          text: <<~TEXT
+            Figuritas App - Lista
+            Me faltan
+            ZZMG 🇦🇷: 62001
+
+            Repetidas
+            ZZMH 🇧🇷: 62002
+            ZZMH 🇧🇷: 99999
+          TEXT
+        }
+      }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Cruce directo")
+      expect(response.body).to include("Te puede dar")
+      expect(response.body).to include("Le puedes ofrecer")
+      expect(response.body).to include(offerable.display_name)
+      expect(response.body).to include(requestable.display_name)
+      expect(response.body).to include("No se encontraron estas fichas en el catálogo: ZZMH99999.")
+      expect(response.body).not_to include(unrelated.display_name)
+    end
+
+    it "renders an inline error when the pasted text cannot be analyzed" do
+      user = create(:user)
+
+      sign_in_as(user)
+
+      post compare_import_export_dashboard_path, params: {
+        external_inventory_match: {
+          text: "hola mundo"
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("No pudimos analizar esa lista")
+      expect(response.body).to include("No se encontraron faltantes ni repetidas en el texto pegado.")
+      expect(response.body).to include("Analizar cruce")
     end
   end
 end

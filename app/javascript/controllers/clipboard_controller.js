@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["label"]
+  static targets = ["label", "source"]
   static values = {
     text: String,
     successLabel: { type: String, default: "Copiado" },
@@ -18,10 +18,15 @@ export default class extends Controller {
 
   async copy(event) {
     event.preventDefault()
-    if (!this.textValue) return
+    const text = this.hasSourceTarget ? this.sourceText() : this.textValue
+    if (!text) return
 
-    const copied = await this.writeText(this.textValue)
+    const copied = await this.writeText(text)
     this.updateLabel(copied ? this.successLabelValue : this.errorLabelValue)
+  }
+
+  sourceText() {
+    return this.sourceTarget.value || this.sourceTarget.textContent || ""
   }
 
   async writeText(text) {

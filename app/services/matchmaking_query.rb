@@ -20,6 +20,14 @@ class MatchmakingQuery
     summary_for(other_user)
   end
 
+  def summary_for_inventory(missing_stickers:, duplicate_stickers:, user: nil)
+    summary_for_sticker_ids(
+      other_missing_ids: missing_stickers.map(&:id),
+      other_duplicate_ids: duplicate_stickers.map(&:id),
+      user: user
+    )
+  end
+
   private
     attr_reader :group
     attr_reader :user
@@ -33,12 +41,20 @@ class MatchmakingQuery
         other_duplicate_ids << item.sticker_id if item.duplicate?
       end
 
+      summary_for_sticker_ids(
+        other_missing_ids: other_missing_ids,
+        other_duplicate_ids: other_duplicate_ids,
+        user: other_user
+      )
+    end
+
+    def summary_for_sticker_ids(other_missing_ids:, other_duplicate_ids:, user: nil)
       can_offer = current_duplicate_stickers.select { |sticker| other_missing_ids.include?(sticker.id) }
       can_request = current_missing_stickers.select { |sticker| other_duplicate_ids.include?(sticker.id) }
 
       return if can_offer.empty? && can_request.empty?
 
-      Summary.new(user: other_user, can_offer: can_offer, can_request: can_request)
+      Summary.new(user: user, can_offer: can_offer, can_request: can_request)
     end
 
     def current_duplicate_stickers

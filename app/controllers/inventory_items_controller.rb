@@ -38,6 +38,22 @@ class InventoryItemsController < ApplicationController
     end
   end
 
+  def import
+    result = InventoryTextImport.new(
+      user: current_user,
+      text: inventory_import_params[:text]
+    ).call
+
+    if result.success?
+      redirect_to import_export_dashboard_path,
+                  notice: import_success_message_for(result),
+                  alert: consume_unknown_codes_message_for(result),
+                  status: :see_other
+    else
+      redirect_to import_export_dashboard_path, alert: result.error_message, status: :see_other
+    end
+  end
+
   def consume
     status = inventory_item_params[:status]
     result = InventoryBulkConsume.new(
@@ -101,6 +117,10 @@ class InventoryItemsController < ApplicationController
 
     def update_params
       params.require(:inventory_item).permit(:quantity)
+    end
+
+    def inventory_import_params
+      params.require(:inventory_import).permit(:text)
     end
 
     def set_notice(message)
@@ -215,6 +235,12 @@ class InventoryItemsController < ApplicationController
       return if result.processed_count.zero?
 
       "Nuevas figuras registradas."
+    end
+
+    def import_success_message_for(result)
+      return if result.missing_count.zero? && result.duplicate_items_count.zero?
+
+      "Importación completada: #{result.missing_count} faltantes y #{result.duplicate_copies_count} repetidas (#{result.duplicate_items_count} fichas)."
     end
 
     def consume_unknown_codes_message_for(result)

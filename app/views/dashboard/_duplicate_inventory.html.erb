@@ -1,5 +1,3 @@
-<% duplicate_codes_text = @duplicate_export_codes_text %>
-
 <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
     <div class="space-y-2">
@@ -8,17 +6,6 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-3 text-sm font-medium">
-      <%= button_tag type: "button",
-                     disabled: duplicate_codes_text.blank?,
-                     class: "inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-50",
-                     data: {
-                       controller: "clipboard",
-                       action: "click->clipboard#copy",
-                       clipboard_text_value: duplicate_codes_text,
-                       clipboard_success_label_value: "Copiado"
-                     } do %>
-        <span data-clipboard-target="label">Copiar repetidas</span>
-      <% end %>
       <span class="rounded-full bg-emerald-100 px-4 py-2 text-emerald-900"><%= @duplicate_copies_count %> copias</span>
       <span class="rounded-full bg-slate-100 px-4 py-2 text-slate-700"><%= @duplicate_items_count %> fichas</span>
     </div>

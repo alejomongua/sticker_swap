@@ -7,8 +7,8 @@ RSpec.describe 'Matches', type: :request do
       teammate = create(:user, create_default_group: false)
       outsider = create(:user, create_default_group: false)
       group = create(:group, admin_user: current_user)
-      offered_sticker = create(:sticker, prefix: 'ARG', number: 1, name: 'Argentina')
-      requested_sticker = create(:sticker, prefix: 'BRA', number: 2, name: 'Brasil')
+      offered_sticker = create(:sticker, prefix: 'ZZMO', number: 71_001, name: 'Argentina')
+      requested_sticker = create(:sticker, prefix: 'ZZMP', number: 71_002, name: 'Brasil')
 
       group.add_member!(teammate)
 

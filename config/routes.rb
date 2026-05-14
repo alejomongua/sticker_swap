@@ -27,12 +27,15 @@ Rails.application.routes.draw do
   get :manual, to: "manual#show", as: :manual
 
   get :panel, to: "dashboard#show", as: :dashboard
+  get "panel/importar-exportar", to: "dashboard#import_export", as: :import_export_dashboard
+  post "panel/importar-exportar/comparar", to: "dashboard#compare_external", as: :compare_import_export_dashboard
   get "panel/faltantes-tabla", to: "dashboard#missing_table", as: :missing_table_dashboard
   get :progreso, to: "progress#show", as: :progress
   get :estadisticas, to: "statistics#show", as: :statistics
   resource :profile, only: %i[ edit update ], path: :perfil
   resources :inventory_items, only: %i[ create update destroy ], path: :inventario do
     collection do
+      post :import, path: :importar
       post :add_new, path: :nuevas
       post :consume, path: :consumir
     end

@@ -245,6 +245,68 @@ RSpec.describe 'InventoryItems', type: :request do
     end
   end
 
+  describe 'POST /inventario/importar' do
+    it 'replaces inventory using the Figuritas App text format and counts repeated duplicates' do
+      user = create(:user)
+      missing_one = create(:sticker, prefix: 'ZZFA', number: 2, name: 'Logo', group_name: 'Grupo Z')
+      missing_two = create(:sticker, prefix: 'ZZFA', number: 3, name: 'Balon', group_name: 'Grupo Z')
+      missing_three = create(:sticker, prefix: 'ZZFB', number: 4, name: 'Mexico', group_name: 'Grupo Z')
+      duplicate_two_copies = create(:sticker, prefix: 'ZZFB', number: 5, name: 'Mexico extra', group_name: 'Grupo Z')
+      duplicate_one_copy = create(:sticker, prefix: 'ZZFB', number: 6, name: 'Mexico segunda', group_name: 'Grupo Z')
+      duplicate_last = create(:sticker, prefix: 'ZZFC', number: 1, name: 'Argentina', group_name: 'Grupo Z')
+      stale_missing = create(:sticker, prefix: 'ZZIM', number: 99_991, name: 'Vieja faltante', group_name: 'Grupo Z')
+      stale_duplicate = create(:sticker, prefix: 'ZZIN', number: 99_992, name: 'Vieja repetida', group_name: 'Grupo Z')
+
+      create(:inventory_item, user: user, sticker: stale_missing)
+      create(:inventory_item, :duplicate, user: user, sticker: stale_duplicate, quantity: 4)
+
+      sign_in_as(user)
+
+      post import_inventory_items_path, params: {
+        inventory_import: {
+          text: <<~TEXT
+            Figuritas App - Lista
+            Usa Mex Can 26
+            Me faltan
+            ZZFA 🏆: 2, 3
+            ZZFB 🇲🇽: 4, 99999
+
+            Repetidas
+            ZZFB 🇲🇽: 5, 5, 6
+            ZZFC 🇦🇷: 1
+          TEXT
+        }
+      }
+
+      expect(response).to redirect_to(import_export_dashboard_path)
+      expect(flash[:notice]).to eq('Importación completada: 3 faltantes y 4 repetidas (3 fichas).')
+      expect(flash[:alert]).to eq('No se encontraron: ZZFB99999.')
+      expect(user.inventory_items.where(status: :missing).pluck(:sticker_id)).to match_array([ missing_one.id, missing_two.id, missing_three.id ])
+      expect(user.inventory_items.find_by!(sticker: duplicate_two_copies).quantity).to eq(2)
+      expect(user.inventory_items.find_by!(sticker: duplicate_one_copy).quantity).to eq(1)
+      expect(user.inventory_items.find_by!(sticker: duplicate_last).quantity).to eq(1)
+      expect(user.inventory_items.find_by(sticker: stale_missing)).to be_nil
+      expect(user.inventory_items.find_by(sticker: stale_duplicate)).to be_nil
+    end
+
+    it 'rejects text that does not contain importable sections' do
+      user = create(:user)
+      existing_item = create(:inventory_item, user: user)
+
+      sign_in_as(user)
+
+      post import_inventory_items_path, params: {
+        inventory_import: {
+          text: 'hola mundo'
+        }
+      }
+
+      expect(response).to redirect_to(import_export_dashboard_path)
+      expect(flash[:alert]).to eq('No se encontraron faltantes ni repetidas en el texto pegado.')
+      expect(existing_item.reload).to be_missing
+    end
+  end
+
   describe 'PATCH /inventario/:id' do
     it 'updates the quantity for duplicate items' do
       user = create(:user)
