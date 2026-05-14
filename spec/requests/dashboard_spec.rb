@@ -96,6 +96,8 @@ RSpec.describe "Dashboard", type: :request do
       expect(response.body).to include(add_new_inventory_items_path)
       expect(response.body).to include("Importar / exportar")
       expect(response.body).to include(import_export_dashboard_path)
+      expect(response.body).to include(%(href="#{import_export_dashboard_path}"))
+      expect(response.body).to include('data-turbo="false"')
       expect(response.body).not_to include("Copiar faltantes")
       expect(response.body).not_to include("Copiar repetidas")
     end
