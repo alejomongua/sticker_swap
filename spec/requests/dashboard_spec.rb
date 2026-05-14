@@ -286,6 +286,7 @@ RSpec.describe "Dashboard", type: :request do
       expect(response.body).to include(import_inventory_items_path)
       expect(response.body).to include("Comparar una lista externa")
       expect(response.body).to include(compare_import_export_dashboard_path)
+      expect(response.body).to include('data-turbo="false"')
       expect(response.body).to include("Copiar faltantes")
       expect(response.body).to include("Copiar repetidas")
       expect(response.body).to include(user.missing_codes_text)

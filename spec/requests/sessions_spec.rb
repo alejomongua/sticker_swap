@@ -19,5 +19,32 @@ RSpec.describe "Sessions", type: :request do
       expect(response.body).to include("Sesión iniciada correctamente.")
       expect(response.body).to include("Tu inventario")
     end
+
+    it "sets the custom session_id cookie on login" do
+      user = create(:user)
+
+      post session_path, params: { email: user.email, password: "password123" }
+
+      expect(response).to have_http_status(:see_other)
+      set_cookie_header = Array(response.headers["Set-Cookie"]).join("\n")
+
+      expect(set_cookie_header).to include("session_id=")
+      expect(set_cookie_header).not_to include("session_id=; path=/")
+    end
+
+    it "marks the custom session cookie as secure only when SSL is enabled" do
+      user = create(:user)
+
+      allow(StickerSwap::RuntimeConfig).to receive(:force_ssl?).and_return(true)
+      https!
+
+      post session_path, params: { email: user.email, password: "password123" }
+
+      expect(response).to have_http_status(:see_other)
+      set_cookie_header = Array(response.headers["Set-Cookie"]).join("\n")
+
+      expect(set_cookie_header).to include("session_id=")
+      expect(set_cookie_header).to include("secure")
+    end
   end
 end

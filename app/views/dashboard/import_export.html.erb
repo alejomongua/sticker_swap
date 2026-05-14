@@ -37,7 +37,7 @@
         <p class="text-sm text-slate-600">Pega una exportación de figuritas.app para ver qué le puedes ofrecer y qué podrías recibir, sin importar si la otra persona usa StickerSwap.</p>
       </div>
 
-      <%= form_with scope: :external_inventory_match, url: compare_import_export_dashboard_path, class: "mt-5 space-y-4" do |form| %>
+      <%= form_with scope: :external_inventory_match, url: compare_import_export_dashboard_path, class: "mt-5 space-y-4", data: { turbo: false } do |form| %>
         <div class="space-y-2">
           <%= form.label :text, "Lista externa", class: "block text-sm font-medium text-slate-700" %>
           <%= form.text_area :text, value: @external_inventory_text, rows: 16, class: "block w-full rounded-2xl border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 focus:border-accent-700 focus:ring-accent-700" %>

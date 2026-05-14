@@ -61,7 +61,7 @@ module Authentication
           value: session_record.id,
           httponly: true,
           same_site: :lax,
-          secure: Rails.env.production?
+          secure: StickerSwap::RuntimeConfig.force_ssl?
         }
       end
     end
